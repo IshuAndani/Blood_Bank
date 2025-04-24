@@ -1,0 +1,25 @@
+/frontend
+# Ignore node_modules in both frontend and backend
+/node_modules/
+
+# Ignore environment files (in root, backend, or frontend)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Ignore build outputs (both frontend and backend)
+/frontend/build/
+/backend/dist/
+
+# Ignore logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

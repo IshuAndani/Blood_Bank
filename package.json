@@ -1,0 +1,24 @@
+{
+  "name": "blood_bank",
+  "version": "1.0.0",
+  "description": "A blood bank management system built using the MERN stack, allowing hospitals to manage blood inventory, track donor eligibility, and notify past donors based on location, blood type, and donation history.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "blood-bank",
+    "donation",
+    "MERN",
+    "Node.js",
+    "MongoDB",
+    "Express",
+    "React",
+    "hospital-management",
+    "backend",
+    "healthcare",
+    "notifications"
+  ],
+  "author": "Ishu Andani",
+  "license": "ISC"
+}
