@@ -14,10 +14,6 @@ const hospitalSchema = new mongoose.Schema({
             values : ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
             message : 'We are not operational in {VALUE} yet'  
         }
-    },
-    admins : {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'Admin'
     }
 }, {timestamps: true});
 
@@ -30,4 +26,4 @@ hospitalSchema.pre('save', function (next) {
 
 hospitalSchema.index({ location: '2dsphere' }); // for geo-queries
 
-module.exports = mongoose.model('Hospital', hospitalSchema);
+exports.Hospital = mongoose.model('Hospital', hospitalSchema);

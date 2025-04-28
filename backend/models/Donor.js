@@ -54,4 +54,4 @@ donorSchema.pre('save', function (next) {
 });
   
 
-module.exports = mongoose.model('Donor', donorSchema);
+exports.Donor = mongoose.model('Donor', donorSchema);

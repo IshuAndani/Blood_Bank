@@ -26,4 +26,4 @@ const shortageSchema = new mongoose.Schema({
     },
 }, {timestamps: true});
 
-module.exports = mongoose.model('Shortage', shortageSchema);
+exports.Shortage = mongoose.model('Shortage', shortageSchema);

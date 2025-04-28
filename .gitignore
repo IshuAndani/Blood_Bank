@@ -2,6 +2,8 @@
 # Ignore node_modules in both frontend and backend
 frontend/node_modules/
 backend/node_modules
+
+backend/scripts/
 # Ignore environment files (in root, backend, or frontend)
 .env
 .env.local
