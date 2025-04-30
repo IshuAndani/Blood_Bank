@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const cleanString = require('../utils/cleanString');
+const { cleanString } = require('../utils/cleanString');
+const { hashedPassword } = require('../utils/passwordUtils');
 
 const donorSchema = new mongoose.Schema({
     name : {
@@ -34,9 +35,15 @@ const donorSchema = new mongoose.Schema({
             message : 'We are not operational in {VALUE} yet'  
         }
     },
+    donations : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'Donation'
+        }
+    ],
     lastDonationDate: {
         type: Date,
-        default: new Date('1970-01-01')
+        default: null
     },
     notifiedShortages: [
         {
@@ -49,6 +56,16 @@ const donorSchema = new mongoose.Schema({
 donorSchema.pre('save', function (next) {
     if (this.name) {
       this.name = cleanString(this.name);
+    }
+    if (this.email){
+        this.email = cleanString(this.email);
+    }
+    next();
+});
+
+donorSchema.pre('save', async function (next) {
+    if (this.isModified('password')) {
+        this.password = await hashedPassword(this.password);
     }
     next();
 });

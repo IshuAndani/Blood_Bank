@@ -69,13 +69,13 @@ exports.registerEmployee = async (req, res) => {
       email,
       password, 
       role,
-      workplace: toObjectId(assignedWorkplace),
+      workplace: assignedWorkplace,
     });
 
     await newAdmin.save();
 
     // Add new employee to the workplace
-    bank.employees[role].push(toObjectId(newAdmin._id)); 
+    bank.employees[role].push(newAdmin._id); 
     await bank.save();
 
     res.status(201).json({

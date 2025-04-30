@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const { cleanString } = require('../utils/cleanString');
+const { hashedPassword } = require('../utils/passwordUtils');
 
 const adminSchema = new mongoose.Schema({
     name: {
@@ -46,7 +46,7 @@ adminSchema.pre('save', function (next) {
 
 adminSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 10); // Hash the password before saving
+        this.password = await hashedPassword(this.password);
     }
     next();
 });

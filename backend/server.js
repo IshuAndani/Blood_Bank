@@ -1,8 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+
 const authRoutes = require('./routes/authRoutes');
-const bloodBankRoutes = require('./routes/bloodBankRoutes');
+const publicDonorRoutes = require('./routes/public/donorRoutes');
+const bloodBankRoutes = require('./routes/api/v1/bloodBankRoutes');
+const donorRoutes = require('./routes/api/v1/donorRoutes');
+const donationRoutes = require('./routes/api/v1/donationRoutes');
+const inventoryRoutes = require('./routes/api/v1/inventoryRoutes');
+
 const { errorMiddleware } = require('./middlewares/errorMiddleware');
 const { connectDB } = require('./utils/db');
 
@@ -22,8 +28,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use(process.env.API_AUTH_PATH, authRoutes);
-app.use(process.env.API_BLOODBANK_PATH, bloodBankRoutes);
+app.use('/api/auth', authRoutes);
+
+// Public routes
+app.use('/api/public/donor', publicDonorRoutes);
+
+// Protected API routes
+app.use('/api/v1/bloodbank', bloodBankRoutes);
+app.use('/api/v1/donor', donorRoutes);
+app.use('/api/v1/donation', donationRoutes);
+app.use('/api/v1/inventory', inventoryRoutes);
 
 // Root route
 app.get('/', (req, res) => {

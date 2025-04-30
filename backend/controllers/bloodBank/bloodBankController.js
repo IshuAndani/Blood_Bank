@@ -1,5 +1,7 @@
-const { BloodBank } = require('../models/BloodBank');
-const { asyncHandler } = require('../utils/asyncHandler')
+// backend/controllers/bloodBankController.js
+const { BloodBank } = require('../../models/BloodBank');
+const inventoryService = require('../../services/inventoryService');
+const { asyncHandler } = require('../../utils/asyncHandler');
 
 exports.createBloodBank = async (req, res) => {
   try {
@@ -27,18 +29,29 @@ exports.createBloodBank = async (req, res) => {
       name,
       city,
       employees: {
-        headadmins: [],
-        admins: [],
-        observers: []
+        headadmin: [],
+        admin: [],
+        observer: []
       }
     });
 
     await newBloodBank.save();
 
+    // Create inventory for the new blood bank
+    const inventory = await inventoryService.createInventory(newBloodBank._id);
+    
+    // Update blood bank with inventory reference
+    newBloodBank.inventory = inventory._id;
+    await newBloodBank.save();
+
     res.status(201).json({
       success: true,
       message: 'Blood Bank created successfully',
-      BloodBank: newBloodBank
+      BloodBank: newBloodBank,
+      inventory: {
+        id: inventory._id,
+        bloodGroups: inventory.bloodGroups
+      }
     });
 
   } catch (error) {

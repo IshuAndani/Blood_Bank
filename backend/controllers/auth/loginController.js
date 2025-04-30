@@ -1,10 +1,9 @@
-const jwt = require('jsonwebtoken');
 const { Admin } = require('../../models/Admin');
 const { comparePassword } = require('../../utils/passwordUtils');
 const { cleanString } = require('../../utils/cleanString');
 const { errorResponse } = require('../../utils/errorResponse');
 const { asyncHandler } = require('../../utils/asyncHandler');
-const { jwtSecret, jwtExpiration } = require('../../config/auth');
+const { generateToken } = require('../../utils/generateToken');
 
 // Login controller
 exports.login = async (req, res) => {
@@ -37,7 +36,7 @@ exports.login = async (req, res) => {
     };
 
     // Generate token
-    const token = jwt.sign(payload, jwtSecret, { expiresIn: jwtExpiration });
+    const token = generateToken(payload);
 
     res.status(200).json({
       success: true,
