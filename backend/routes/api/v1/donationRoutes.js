@@ -20,17 +20,17 @@ router.post(
 );
 
 // Get donation history for a donor
-router.get(
-  '/donor/:donorId',
-  protect,
-  checkRole(['headadmin', 'admin']),
-  canAccessBloodBank,
-  getDonorDonations
-);
+// router.get(
+//   '/donor/:donorId',
+//   protect,
+//   checkRole(['headadmin', 'admin']),
+//   canAccessBloodBank,
+//   getDonorDonations
+// );
 
 // Get donations for a blood bank
 router.get(
-  '/bloodbank',
+  '/',
   protect,
   checkRole(['headadmin', 'admin']),
   canAccessBloodBank,

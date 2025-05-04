@@ -24,6 +24,9 @@ const BloodRequestSchema = new mongoose.Schema({
         enum: ['pending', 'approved', 'rejected'],
         required: true,
         default: 'pending'
+    },
+    rejectReason : {
+        type : String
     }
 },{timestamps : true});
 

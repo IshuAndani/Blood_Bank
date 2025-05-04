@@ -3,6 +3,8 @@ const { errorResponse } = require('../../utils/errorResponse');
 const { asyncHandler } = require('../../utils/asyncHandler');
 const { comparePassword } = require('../../utils/passwordUtils');
 const { generateToken } = require('../../utils/generateToken');
+const { Donor } = require('../../models/Donor');
+const {BloodBank} = require('../../models/BloodBank');
 // const { generatePassword } = require('../../utils/passwordUtils');
 
 // Controller for public donor registration
@@ -78,7 +80,8 @@ exports.loginDonor = asyncHandler(async (req, res) => {
       success: true,
       message: 'Login successful',
       token: `Bearer ${token}`,
-      donorId: existingDonor._id
+      donorId: existingDonor._id,
+      lastDonationDate : existingDonor.lastDonationDate
     });
   } catch (error) {
       console.error('Error during login:', error.message);
@@ -150,3 +153,53 @@ exports.createDonorByAdmin = asyncHandler(async (req, res) => {
     return errorResponse(res, 400, error.message);
   }
 });
+
+exports.getDonations = async(req,res) => {
+  try{
+    // const donor = req.donor;
+    // if(!donor) errorResponse(res,401,"donor not found");
+    
+    const donorWithDonations = await Donor.findById(req.donor.id)
+      .populate({
+        path: 'donations',
+        select: 'createdAt donatedAt',
+        populate: {
+          path: 'donatedAt',
+          model: 'BloodBank',
+          select: 'name city'
+        }
+      });
+
+    res.status(200).json({
+      success: true,
+      donations: donorWithDonations.donations,
+    });
+  }catch(error){
+    errorResponse(res,500,"error fetching donations",error);
+  }
+}
+
+exports.getBloodBanks = async(req,res) => {
+  try {
+    let {city} = req.query;
+
+    if(!city){
+      if(!req.donor) errorResponse(res,400,"Please provide city or LOGIN");
+      // let donor = await Donor.findById(req.admin.id)
+      city = req.donor.city;
+    }
+    
+    const bloodbanksInCity = await BloodBank.find({city : city});
+
+    const bloodbanks = bloodbanksInCity.map(bloodbank => bloodbank.name);
+    
+    return res.status(200).json({
+      success : true,
+      city : city,
+      bloodbanks
+    });
+
+  } catch (error) {
+    errorResponse(res,500,"Error getting bloodbanks", error);
+  }
+}
