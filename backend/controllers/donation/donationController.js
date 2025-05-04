@@ -6,18 +6,17 @@ const { asyncHandler } = require('../../utils/asyncHandler');
 // Create new donation
 exports.createDonation = asyncHandler(async (req, res) => {
   try {
-    const { donorId, quantity } = req.body;
-    const bloodBankId = req.admin.workplace; // From auth middleware
+    const { donorId } = req.body;
+    const bloodBankId = req.admin.workplaceId; // From auth middleware
     
     // Validate required fields
-    if (!donorId || !quantity) {
-      return errorResponse(res, 400, 'Donor ID, blood group, and quantity are required');
+    if (!donorId ) {
+      return errorResponse(res, 400, 'DonorID is required');
     }
     
     // Create donation
     const donation = await donationService.createDonation({
       donorId,
-      quantity,
       donatedAt: bloodBankId
     });
     
@@ -28,7 +27,6 @@ exports.createDonation = asyncHandler(async (req, res) => {
         id: donation._id,
         donor: donation.donor,
         bloodGroup: donation.bloodGroup,
-        quantityMl: donation.quantity,
         donatedAt: donation.donatedAt,
         createdAt: donation.createdAt
       }
@@ -58,7 +56,7 @@ exports.getDonorDonations = asyncHandler(async (req, res) => {
 // Get donations for a blood bank
 exports.getBloodBankDonations = asyncHandler(async (req, res) => {
   try {
-    const bloodBankId = req.admin.workplace; // From auth middleware
+    const bloodBankId = req.admin.workplaceId; // From auth middleware
     
     const donations = await donationService.getDonationsByBloodBank(bloodBankId);
     

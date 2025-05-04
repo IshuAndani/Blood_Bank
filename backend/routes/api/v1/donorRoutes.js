@@ -3,7 +3,7 @@ const express = require('express');
 const { searchDonor, createDonorByAdmin } = require('../../../controllers/donor/donorController');
 const { protect } = require('../../../middlewares/auth/protect');
 const { checkRole } = require('../../../middlewares/auth/roleMiddleware');
-const { canAccessWorkplace } = require('../../../middlewares/accessContol');
+const { canAccessBloodBank } = require('../../../middlewares/accessContol');
 
 const router = express.Router();
 
@@ -12,6 +12,7 @@ router.get(
   '/search',
   protect,
   checkRole(['headadmin', 'admin']),
+  canAccessBloodBank,
   searchDonor
 );
 
@@ -20,6 +21,7 @@ router.post(
   '/create',
   protect,
   checkRole(['headadmin', 'admin']),
+  canAccessBloodBank,
   createDonorByAdmin
 );
 

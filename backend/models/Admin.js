@@ -21,15 +21,22 @@ const adminSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["superadmin", "admin", "headadmin", "observer"],
+        enum: ["superadmin", "admin", "headadmin"],
         required: true
     },
     // Store references to a single workspace (BloodBank or Hospital)
-    workplace: {
+    workplaceType: {
+        type: String,
+        enum: ['BloodBank', 'Hospital'],
+        required: function () {
+            return this.role !== 'superadmin';
+        }
+    },
+    workplaceId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BloodBank', 
-        required: function() {
-            return this.role !== 'superadmin';// Only require workplace if the role is not superadmin
+        refPath: 'workplaceType',
+        required: function () {
+            return this.role !== 'superadmin';
         }
     }
 }, {timestamps: true});

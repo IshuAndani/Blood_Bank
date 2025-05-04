@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { cleanString } = require('../utils/cleanString');
+const { ALLOWED_CITIES } = require('../../shared/constants/cities');
 
 const bloodBankSchema = new mongoose.Schema({
     name: {
@@ -12,7 +13,7 @@ const bloodBankSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : {
-            values : ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
+            values : ALLOWED_CITIES,
             message : 'We are not operational in {VALUE} yet'  
         }
     },
@@ -33,7 +34,13 @@ const bloodBankSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Admin'
         }]
-      },
+    },
+    BloodRequest: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'BloodRequest'
+        }
+    ]
 }, {timestamps: true});
 
 bloodBankSchema.pre('save', function (next) {

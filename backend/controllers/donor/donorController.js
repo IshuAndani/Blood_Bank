@@ -8,10 +8,10 @@ const { generateToken } = require('../../utils/generateToken');
 // Controller for public donor registration
 exports.registerDonor = asyncHandler(async (req, res) => {
   try {
-    const { name, email, password, bloodGroup, city } = req.body;
+    const { name, email, password, bloodGroup, city, dob } = req.body;
     
     // Validate required fields
-    if (!name || !email || !password || !bloodGroup || !city) {
+    if (!name || !email || !password || !bloodGroup || !city || !dob) {
       return errorResponse(res, 400, 'All fields are required');
     }
     
@@ -21,20 +21,16 @@ exports.registerDonor = asyncHandler(async (req, res) => {
       email,
       password,
       bloodGroup,
-      city
+      city,
+      dob
     });
     
     // Return success without sensitive info
     res.status(201).json({
       success: true,
       message: 'Donor registered successfully',
-      donor: {
-        id: donor._id,
-        name: donor.name,
-        email: donor.email,
-        bloodGroup: donor.bloodGroup,
-        city: donor.city
-      }
+      donorId: donor._id,
+      donorEmail: donor.email
     });
   } catch (error) {
     return errorResponse(res, 400, error.message);
@@ -71,6 +67,8 @@ exports.loginDonor = asyncHandler(async (req, res) => {
     // Create JWT payload
     const payload = {
       id: existingDonor._id,
+      bloodGroup : existingDonor.bloodGroup,
+      role : "donor"
     };
 
     // Generate token
@@ -80,13 +78,7 @@ exports.loginDonor = asyncHandler(async (req, res) => {
       success: true,
       message: 'Login successful',
       token: `Bearer ${token}`,
-      donor: {
-        id: existingDonor._id,
-        name: existingDonor.name,
-        email: existingDonor.email,
-        bloodGroup: existingDonor.bloodGroup,
-        city: existingDonor.city
-      }
+      donorId: existingDonor._id
     });
   } catch (error) {
       console.error('Error during login:', error.message);
@@ -106,6 +98,7 @@ exports.searchDonor = asyncHandler(async (req, res) => {
     const donor = await donorService.findDonorByEmail(email);
     
     if (!donor) {
+      console.log("donor not found");
       return res.status(404).json({
         success: false,
         message: 'Donor not found'
@@ -131,11 +124,11 @@ exports.searchDonor = asyncHandler(async (req, res) => {
 // Controller for admins to create donor
 exports.createDonorByAdmin = asyncHandler(async (req, res) => {
   try {
-    const { name, email, password, bloodGroup, city } = req.body;
+    const { name, email, password, bloodGroup, city, dob } = req.body;
     
     // Validate required fields
-    if (!name || !email || !bloodGroup || !city) {
-      return errorResponse(res, 400, 'Name, email, password, blood group, and city are required');
+    if (!name || !email || !bloodGroup || !city || !dob) {
+      return errorResponse(res, 400, 'Name, email, password, blood group, city and dob are required');
     }
     
     // Create donor
@@ -144,20 +137,14 @@ exports.createDonorByAdmin = asyncHandler(async (req, res) => {
       email,
       password, 
       bloodGroup,
-      city
+      city,
+      dob
     });
     
     res.status(201).json({
       success: true,
       message: 'Donor created successfully',
-      donor: {
-        id: donor._id,
-        name: donor.name,
-        email: donor.email,
-        bloodGroup: donor.bloodGroup,
-        city: donor.city,
-        password: password 
-      }
+      donorId: donor._id
     });
   } catch (error) {
     return errorResponse(res, 400, error.message);

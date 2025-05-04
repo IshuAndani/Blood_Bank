@@ -14,14 +14,16 @@ exports.protect = async (req, res, next) => {
     }
     
     if (!token) {
+      console.log("no token for protected route")
       return res.status(401).json({ 
         success: false, 
         message: 'Not authorized to access this route' 
       });
     }
-    
+    // console.log(token);
     // Verify token
     const decoded = jwt.verify(token, jwtSecret);
+    // console.log(decoded);
     
     // Find the admin by id from token
     const admin = await Admin.findById(decoded.id);
@@ -38,7 +40,8 @@ exports.protect = async (req, res, next) => {
       name: admin.name,
       email: admin.email,
       role: admin.role,
-      workplace: admin.workplace
+      workplaceType: admin.workplaceType,
+      workplaceId: admin.workplaceId
     };
     
     next();

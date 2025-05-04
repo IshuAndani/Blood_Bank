@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
+const moment = require('moment'); // For date manipulation
 const { cleanString } = require('../utils/cleanString');
 const { hashedPassword } = require('../utils/passwordUtils');
+const { ALLOWED_CITIES } = require('../../shared/constants/cities'); 
 
 const donorSchema = new mongoose.Schema({
     name : {
@@ -31,8 +33,19 @@ const donorSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : {
-            values : ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
+            values : ALLOWED_CITIES,
             message : 'We are not operational in {VALUE} yet'  
+        }
+    },
+    dob: { 
+        type: Date, 
+        required: true, 
+        validate: {
+          validator: function(dob) {
+            const age = moment().diff(moment(dob), 'years'); // Calculate age
+            return age >= 18; // Validator to check if age is >= 18
+          },
+          message: 'Donor must be at least 18 years old.'
         }
     },
     donations : [

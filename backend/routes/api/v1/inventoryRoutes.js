@@ -3,7 +3,7 @@ const express = require('express');
 const { getInventory } = require('../../../controllers/inventory/inventoryController');
 const { protect } = require('../../../middlewares/auth/protect');
 const { checkRole } = require('../../../middlewares/auth/roleMiddleware');
-const { canAccessWorkplace } = require('../../../middlewares/accessContol');
+const { canAccessBloodBank } = require('../../../middlewares/accessContol');
 
 const router = express.Router();
 
@@ -11,8 +11,8 @@ const router = express.Router();
 router.get(
   '/',
   protect,
-  checkRole(['superadmin', 'headadmin', 'admin', 'observer']),
-  // canAccessWorkplace,
+  checkRole(['headadmin', 'admin']),
+  canAccessBloodBank,
   getInventory
 );
 

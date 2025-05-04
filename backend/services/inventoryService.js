@@ -18,7 +18,7 @@ exports.createInventory = async (bloodBankId) => {
 };
 
 // Add blood to inventory
-exports.addBloodToInventory = async (bloodBankId, bloodGroup, quantity, session = null) => {
+exports.addBloodToInventory = async (bloodBankId, bloodGroup, session = null) => {
   try {
     const inventory = await Inventory.findOne({ bloodBank: bloodBankId });
     
@@ -28,7 +28,7 @@ exports.addBloodToInventory = async (bloodBankId, bloodGroup, quantity, session 
     
     // Update inventory with new blood units
     const updateQuery = {};
-    updateQuery[`bloodGroups.${bloodGroup}`] = quantity; // No conversion needed
+    updateQuery[`bloodGroups.${bloodGroup}`] = 1; // No conversion needed
     
     const options = { new: true };
     if (session) options.session = session;

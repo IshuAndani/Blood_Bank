@@ -1,4 +1,5 @@
 const { Admin } = require('../../models/Admin');
+const { Hospital } = require('../../models/Hospital');
 const { BloodBank } = require('../../models/BloodBank');
 const { errorResponse } = require('../../utils/errorResponse');
 const { toObjectId } = require('../../utils/helpers');
@@ -7,31 +8,41 @@ const { asyncHandler } = require('../../utils/asyncHandler');
 // Helper function to check if role is valid
 const isRoleValidForRequester = (role, requesterRole) => {
   if (requesterRole === 'superadmin') {
-    return ['headadmin', 'admin', 'observer'].includes(role);
+    return role && ['headadmin', 'admin'].includes(role);
   } else if (requesterRole === 'headadmin') {
-    return ['admin', 'observer'].includes(role);
+    return true;
   }
   return false;
 };
 
 // Helper function to validate workplace for superadmin
-const validateWorkplaceForSuperadmin = async (workplace) => {
-  const bank = await BloodBank.findById(workplace);
-  if (!bank) {
-    throw new Error('Blood Bank not found.');
+const validateWorkplaceForSuperadmin = async (workplaceId, workplaceType) => {
+  let workplace;
+  if(workplaceType === 'BloodBank'){
+    workplace = await BloodBank.findById(workplaceId);
   }
-  return bank;
+  else if (workplaceType === 'Hospital'){
+    workplace = await Hospital.findById(workplaceId);
+  }
+  else{
+    throw new Error('Invalid workplace type. Must be either BloodBank or Hospital.');
+    // errorResponse(res, 400, 'Invalid workplace type. Must be either BloodBank or Hospital.');
+  }
+  if (!workplace) {
+    throw new Error('Workplace not found.');
+  }
+  return workplace;
 };
 
 // POST /api/auth/register
 exports.registerEmployee = async (req, res) => {
   try {
-    const { name, email, password, role, workplace } = req.body;
+    let { name, email, password, role, workplaceType, workplaceId } = req.body;
     const requester = req.admin; // Fetched from protect middleware (logged in admin)
 
-    // Validate required fields
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'Name, email, password, and role are required.' });
+    // Validate required 
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, password are required.' });
     }
 
     // Validate email uniqueness
@@ -40,28 +51,40 @@ exports.registerEmployee = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already in use.' });
     }
 
-    let bank;
     // Validate role permissions
     if (!isRoleValidForRequester(role, requester.role)) {
       return res.status(403).json({ success: false, message: `You are not authorized to create ${role}s.` });
     }
 
+    let workplace;
     if (requester.role === 'superadmin') {
-      if (!workplace) {
-        return res.status(400).json({ success: false, message: 'Workplace (blood bank) must be provided by superadmin.' });
+      if (!workplaceId || !workplaceType) {
+        errorResponse(res, 400, 'WorkplaceId and WorkplaceType must be provided by superadmin.');
+        // return res.status(400).json({ success: false, message: 'WorkplaceId and WorkplaceType must be provided by superadmin.' });
       }
-      bank = await validateWorkplaceForSuperadmin(workplace);
+      workplace = await validateWorkplaceForSuperadmin(workplaceId, workplaceType);
     } else if (requester.role === 'headadmin') {
-      bank = await BloodBank.findById(requester.workplace);
-      if (!bank) {
-        return res.status(404).json({ success: false, message: 'Blood Bank not found.' });
+      role = "admin";
+      if(requester.workplaceType === 'BloodBank'){
+        workplace = await BloodBank.findById(requester.workplaceId);
+      }
+      else if(requester.workplaceType === 'Hospital'){
+        workplace = await Hospital.findById(requester.workplaceId);
+      }
+      else{
+        errorResponse(res, 400, 'Invalid workplace type. Must be either BloodBank or Hospital.');
+      }
+      if (!workplace) {
+        errorResponse(res, 404, 'Workplace not found.');
+        // return res.status(404).json({ success: false, message: 'workplace not found.' });
       }
     } else {
-      return res.status(403).json({ success: false, message: 'You are not authorized to create employees.' });
+      errorResponse(res, 403, 'You are not authorized to create employees.');
+      // return res.status(403).json({ success: false, message: 'You are not authorized to create employees.' });
     }
 
     // Set workplace
-    const assignedWorkplace = requester.role === 'superadmin' ? workplace : requester.workplace;
+    const assignedWorkplace = requester.role === 'superadmin' ? workplace._id : requester.workplaceId;
 
     // Create new admin
     const newAdmin = new Admin({
@@ -69,14 +92,15 @@ exports.registerEmployee = async (req, res) => {
       email,
       password, 
       role,
-      workplace: assignedWorkplace,
+      workplaceType: workplace.constructor.modelName,
+      workplaceId: assignedWorkplace,
     });
 
     await newAdmin.save();
 
     // Add new employee to the workplace
-    bank.employees[role].push(newAdmin._id); 
-    await bank.save();
+    workplace.employees[role].push(newAdmin._id); 
+    await workplace.save();
 
     res.status(201).json({
       success: true,
@@ -86,7 +110,8 @@ exports.registerEmployee = async (req, res) => {
         name: newAdmin.name,
         email: newAdmin.email,
         role: newAdmin.role,
-        workplace: newAdmin.workplace,
+        workplaceId: newAdmin.workplaceId,
+        workplaceType: newAdmin.workplaceType
       },
     });
 

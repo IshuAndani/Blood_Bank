@@ -1,7 +1,8 @@
 exports.errorResponse = (res, statusCode, message, error = null) => {
+  if(error) console.error(error);
   const response = {
     success: false,
-    message,
+    message : message || error.message,
   };
 
   if (error) {

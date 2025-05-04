@@ -1,6 +1,27 @@
 const { getWorkplaceIdFromRequest } = require('../utils/helpers');
 const { errorResponse } = require('../utils/errorResponse');
 
+
+exports.canAccessBloodBank = async (req,res,next) => {
+    if(req.admin.workplaceType === "BloodBank"){
+        next();
+    }else{
+        console.log(req.admin.workplaceType);
+        return errorResponse(res,403,"You cannot access bloodbank");
+    }
+    
+}
+
+exports.canAccessHospital = async (req,res,next) => {
+    if(req.admin.workplaceType === "Hospital"){
+        next();
+    }else{
+        console.log(req.admin.workplaceType);
+        return errorResponse(res,403,"You cannot access hospital");
+    }
+    
+}
+
 // Check workplace access
 exports.canAccessWorkplace = async (req, res, next) => {
     try {
@@ -13,7 +34,7 @@ exports.canAccessWorkplace = async (req, res, next) => {
         const workplaceId = getWorkplaceIdFromRequest(req);
         
         // Check if admin's workplace matches the requested workplace
-        if (req.admin.workplace && req.admin.workplace.toString() === workplaceId) {
+        if (req.admin.workplaceId && req.admin.workplaceId.toString() === workplaceId) {
         return next();
         }
         

@@ -1,7 +1,9 @@
-// backend/controllers/bloodBankController.js
 const { BloodBank } = require('../../models/BloodBank');
+const { Inventory } = require('../../models/Inventory');
+const { BLOOD_GROUP_MAP } = require('../../../shared/constants/bloodGroups');
 const inventoryService = require('../../services/inventoryService');
 const { asyncHandler } = require('../../utils/asyncHandler');
+const { errorResponse } = require('../../utils/errorResponse');
 
 exports.createBloodBank = async (req, res) => {
   try {
@@ -32,7 +34,8 @@ exports.createBloodBank = async (req, res) => {
         headadmin: [],
         admin: [],
         observer: []
-      }
+      },
+      BloodRequest: [],
     });
 
     await newBloodBank.save();
@@ -60,5 +63,36 @@ exports.createBloodBank = async (req, res) => {
       success: false,
       message: 'Internal Server Error'
     });
+  }
+};
+
+exports.getBloodBanksByBloodGroup = async (req, res) => {
+  const friendlyName = req.query.bloodGroup; // e.g., 'O-positive'
+  const actualKey = BLOOD_GROUP_MAP[friendlyName];
+  console.log(actualKey);
+
+  if (!actualKey) {
+    return res.status(400).json({ success: false, message: 'Blood group is required' });
+  }
+
+  try {
+    const inventories = await Inventory.find({ [`bloodGroups.${actualKey}`]: { $gt: 0 } })
+      .populate('bloodBank', 'id name city'); // only get name and city
+    console.log(inventories);
+    const result = inventories.map(inv => ({
+      id : inv.bloodBank?._id,
+      name: inv.bloodBank?.name,
+      city: inv.bloodBank?.city,
+      availableUnits: inv.bloodGroups[actualKey]
+    }));
+
+    return res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (err) {
+    console.error('Error in blood group search:', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };

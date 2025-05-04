@@ -26,7 +26,7 @@ exports.createDonor = async (donorData) => {
     // Clean input data
     const name = cleanString(donorData.name);
     const email = cleanString(donorData.email).toLowerCase();
-    const { bloodGroup, city, password } = donorData;
+    const { bloodGroup, city, password, dob } = donorData;
 
     // Check if donor already exists
     const existingDonor = await Donor.findOne({ email });
@@ -40,7 +40,8 @@ exports.createDonor = async (donorData) => {
       email,
       password,
       bloodGroup,
-      city
+      city,
+      dob
     });
 
     await newDonor.save();

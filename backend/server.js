@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const publicDonorRoutes = require('./routes/public/donorRoutes');
 const bloodBankRoutes = require('./routes/api/v1/bloodBankRoutes');
+const hospitalRoutes = require('./routes/api/v1/hospitalRoutes');
+const bloodRequestRoutes = require('./routes/api/v1/bloodRequestRoutes');
 const donorRoutes = require('./routes/api/v1/donorRoutes');
 const donationRoutes = require('./routes/api/v1/donationRoutes');
 const inventoryRoutes = require('./routes/api/v1/inventoryRoutes');
@@ -20,6 +22,7 @@ const corsOptions = {
     origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials : true
 };
 
 // Middleware
@@ -35,6 +38,8 @@ app.use('/api/public/donor', publicDonorRoutes);
 
 // Protected API routes
 app.use('/api/v1/bloodbank', bloodBankRoutes);
+app.use('/api/v1/hospital', hospitalRoutes);
+app.use('/api/v1/bloodrequest', bloodRequestRoutes);
 app.use('/api/v1/donor', donorRoutes);
 app.use('/api/v1/donation', donationRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);

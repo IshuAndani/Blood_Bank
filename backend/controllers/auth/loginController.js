@@ -32,7 +32,8 @@ exports.login = async (req, res) => {
     const payload = {
       id: admin._id,
       role: admin.role,
-      workplace: admin.workplace
+      workplaceType: admin.workplaceType,
+      workplaceId: admin.workplaceId
     };
 
     // Generate token
@@ -42,13 +43,10 @@ exports.login = async (req, res) => {
       success: true,
       message: 'Login successful',
       token: `Bearer ${token}`,
-      admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        workplace: admin.workplace
-      }
+      adminId: admin._id,
+      role: admin.role,
+      workplaceId: admin.workplaceId,
+      workplaceType : admin.workplaceType
     });
   } catch (error) {
     console.error('Error during login:', error.message);

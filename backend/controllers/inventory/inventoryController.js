@@ -6,7 +6,7 @@ const { asyncHandler } = require('../../utils/asyncHandler');
 // Get inventory for a blood bank
 exports.getInventory = asyncHandler(async (req, res) => {
   try {
-    const bloodBankId = req.admin.workplace; // From auth middleware
+    const bloodBankId = req.admin.workplaceId; // From auth middleware
     
     const inventory = await inventoryService.getInventory(bloodBankId);
     

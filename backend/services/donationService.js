@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment');
 const { Donation } = require('../models/Donation');
 const donorService = require('./donorService');
 const inventoryService = require('./inventoryService');
@@ -10,13 +11,28 @@ exports.createDonation = async (donationData) => {
   session.startTransaction();
   
   try {
-    const { donorId, quantity, donatedAt } = donationData;
+    const { donorId, donatedAt } = donationData;
     const donor = await donorService.findDonorById(donorId);
+
+    // Check if the donor's last donation date is less than 56 days ago
+    if (donor.lastDonationDate) {
+      const lastDonationDate = new Date(donor.lastDonationDate);
+      const currentDate = new Date();
+      const daysSinceLastDonation = Math.floor((currentDate - lastDonationDate) / (1000 * 60 * 60 * 24)); // Calculate difference in days
+
+      // If less than 56 days have passed, throw an error
+      if (daysSinceLastDonation < 56) {
+        const nextDonationDate = new Date(lastDonationDate);
+        nextDonationDate.setDate(lastDonationDate.getDate() + 56); // Calculate the date when they can donate next
+        const errorMessage = `You cannot donate blood yet. You can donate on ${nextDonationDate.toISOString().split('T')[0]}.`;
+        throw new Error(errorMessage);
+      }
+    }
+
     // Create donation document
     const newDonation = new Donation({
       donor : donorId,
       bloodGroup : donor.bloodGroup,
-      quantity,
       donatedAt
     });
     
@@ -24,12 +40,12 @@ exports.createDonation = async (donationData) => {
     
     donor.donations.push(newDonation._id);
     donor.lastDonationDate = new Date();
-    await donor.save();
+    await donor.save({session});
     // Update donor's donation history and last donation date
     // await donorService.addDonationToHistory(donorId, newDonation._id, session);
     
     // Update blood bank inventory
-    await inventoryService.addBloodToInventory(donatedAt, donor.bloodGroup, quantity, session);
+    await inventoryService.addBloodToInventory(donatedAt, donor.bloodGroup, session);
     
     // Commit the transaction
     await session.commitTransaction();

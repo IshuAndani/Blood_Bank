@@ -14,10 +14,10 @@ const donationSchema = new mongoose.Schema({
             message : '{VALUE} is not a valid blood group'
         }
     },
-    quantity: { 
-        type: Number, //units
-        required: true 
-    }, 
+    // quantity: { 
+    //     type: Number, //units
+    //     required: true 
+    // }, 
     donatedAt: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BloodBank'

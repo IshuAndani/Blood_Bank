@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 exports.getWorkplaceIdFromRequest = (req) => {
-    return req.params.workplaceId || req.body.workplace;
+    return req.params.workplaceId || req.body.workplaceId;
 };
   
 exports.toObjectId = (id) => {
