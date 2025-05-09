@@ -1,5 +1,6 @@
 const { Inventory } = require('../models/Inventory');
 const { Shortage } = require('../models/Shortage');
+const { threshold } = require('../../shared/constants/threshold');
 
 // Create inventory for a new blood bank
 exports.createInventory = async (bloodBankId) => {
@@ -38,6 +39,18 @@ exports.addBloodToInventory = async (bloodBankId, bloodGroup, session = null) =>
       { $inc: updateQuery },
       options
     );
+
+    const shortage = await Shortage.findOne({
+      bloodBank : bloodBankId,
+      bloodGroup : bloodGroup,
+      resolved : false
+    });
+    console.log("updated inventory amount = " + updatedInventory.bloodGroups[bloodGroup]);
+    if(shortage && updatedInventory.bloodGroups[bloodGroup] > threshold){
+      shortage.resolved = true;
+      console.log("shortage resolved");
+      await shortage.save(session);
+    }
     
     return updatedInventory;
   } catch (error) {

@@ -10,6 +10,11 @@ exports.createHospital = async (req, res) => {
             // return res.status(400).json({ message: "Name and city are required" });
         }
 
+        const existingHospital = await Hospital.findOne({name:name});
+        if(existingHospital) {
+            return errorResponse(res,400,"Hospital of this name already exist, pick different name");
+        }
+
         const newHospital = new Hospital({
             name: name,
             city: city,
@@ -17,16 +22,16 @@ exports.createHospital = async (req, res) => {
                 headadmin: [],
                 admin: []
             },
-            BloodRequest: []
+            // BloodRequest: []
         });
 
         await newHospital.save()
-            .then(hospital => {
-                res.status(201).json({ message: "Hospital created successfully", hospital });
-            }).catch(err => {
-                errorResponse(res, 500, err.message);
-                // res.status(500).json({ message: "Error creating hospital", error: err.message });
-            });
+        
+        res.status(201).json({
+            success : true, 
+            message: "Hospital created successfully", 
+            newHospital
+        });
     }catch(err) {
         console.error('Error creating hospital:', err);
         errorResponse(res, 500, err.message);

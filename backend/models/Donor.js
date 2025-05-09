@@ -3,6 +3,7 @@ const moment = require('moment'); // For date manipulation
 const { cleanString } = require('../utils/cleanString');
 const { hashedPassword } = require('../utils/passwordUtils');
 const { ALLOWED_CITIES } = require('../../shared/constants/cities'); 
+const { minAgeForDonor } = require('../config/constants');
 
 const donorSchema = new mongoose.Schema({
     name : {
@@ -41,9 +42,9 @@ const donorSchema = new mongoose.Schema({
         type: Date, 
         required: true, 
         validate: {
-          validator: function(dob) {
+          validator: function(dob) { 
             const age = moment().diff(moment(dob), 'years'); // Calculate age
-            return age >= 18; // Validator to check if age is >= 18
+            return age >= minAgeForDonor; // Validator to check if age is >= 18
           },
           message: 'Donor must be at least 18 years old.'
         }
@@ -58,12 +59,12 @@ const donorSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    notifiedShortages: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Shortage'
-        }
-    ]
+    // notifiedShortages: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'Shortage'
+    //     }
+    // ]
 }, {timestamps: true});
 
 donorSchema.pre('save', function (next) {

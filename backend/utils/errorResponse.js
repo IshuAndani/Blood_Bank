@@ -1,5 +1,6 @@
 exports.errorResponse = (res, statusCode, message, error = null) => {
   if(error) console.error(error);
+  console.log(message);
   const response = {
     success: false,
     message : message || error.message,

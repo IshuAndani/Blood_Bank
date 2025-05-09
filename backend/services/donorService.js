@@ -13,10 +13,16 @@ exports.findDonorByEmail = async (email) => {
 
 exports.findDonorById = async (id) => {
   try {
-    return await Donor.findById(id);
+    const donor = await Donor.findById(id);
+    if(!donor){
+      const err = new Error('Cannot find donor with given ID');
+      err.statusCode = 404;
+      throw err;
+    }
+    return donor;
   } catch (error) {
-    console.error('Error finding donor:', error);
-    throw new Error('Error finding donor');
+    // console.error('Error finding donor:', error);
+    throw error;
   }
 };
 
