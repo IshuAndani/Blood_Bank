@@ -22,6 +22,14 @@ const donationSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BloodBank'
     },
+    status : {
+        type : String,
+        enum : {
+            values : ["stored","expired","used"],
+            message : "Invalid status type"
+        },
+        default : "stored"
+    }
 }, {timestamps: true});
 
 exports.Donation = mongoose.model('Donation', donationSchema);

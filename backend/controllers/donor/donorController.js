@@ -1,23 +1,22 @@
 const donorService = require('../../services/donorService');
-const { errorResponse } = require('../../utils/errorResponse');
 const { asyncHandler } = require('../../utils/asyncHandler');
-const { comparePassword } = require('../../utils/passwordUtils');
+const { comparePassword, generateRandomPassword } = require('../../utils/passwordUtils');
 const { generateToken } = require('../../utils/generateToken');
 const { Donor } = require('../../models/Donor');
-const {BloodBank} = require('../../models/BloodBank');
-// const { generatePassword } = require('../../utils/passwordUtils');
+const { BloodBank } = require('../../models/BloodBank');
+const { transporter } = require('../../utils/nodemailer');
 
 // Controller for public donor registration
 exports.registerDonor = asyncHandler(async (req, res) => {
+  const { name, email, password, bloodGroup, city, dob } = req.body;
+
+  if (!name || !email || !password || !bloodGroup || !city || !dob) {
+    const err = new Error('All fields are required');
+    err.statusCode = 400;
+    throw err;
+  }
+
   try {
-    const { name, email, password, bloodGroup, city, dob } = req.body;
-    
-    // Validate required fields
-    if (!name || !email || !password || !bloodGroup || !city || !dob) {
-      return errorResponse(res, 400, 'All fields are required');
-    }
-    
-    // Create donor
     const donor = await donorService.createDonor({
       name,
       email,
@@ -26,8 +25,7 @@ exports.registerDonor = asyncHandler(async (req, res) => {
       city,
       dob
     });
-    
-    // Return success without sensitive info
+
     res.status(201).json({
       success: true,
       message: 'Donor registered successfully',
@@ -35,45 +33,41 @@ exports.registerDonor = asyncHandler(async (req, res) => {
       donorEmail: donor.email
     });
   } catch (error) {
-    return errorResponse(res, 400, error.message);
+    error.statusCode = error.statusCode || 400;
+    throw error;
   }
 });
 
 exports.loginDonor = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    const err = new Error('All fields are required');
+    err.statusCode = 400;
+    throw err;
+  }
+
   try {
-    const { email, password } = req.body;
-    
-    // Validate required fields
-    if ( !email || !password ) {
-      return errorResponse(res, 400, 'All fields are required');
-    }
-    
     const existingDonor = await donorService.findDonorByEmail(email);
-
     if (!existingDonor) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+      const err = new Error('Invalid credentials');
+      err.statusCode = 401;
+      throw err;
     }
 
-    // Compare passwords
     const isMatch = await comparePassword(password, existingDonor.password);
     if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+      const err = new Error('Invalid credentials');
+      err.statusCode = 401;
+      throw err;
     }
 
-    // Create JWT payload
     const payload = {
       id: existingDonor._id,
-      bloodGroup : existingDonor.bloodGroup,
-      role : "donor"
+      bloodGroup: existingDonor.bloodGroup,
+      role: 'donor'
     };
 
-    // Generate token
     const token = generateToken(payload);
 
     res.status(200).json({
@@ -81,33 +75,33 @@ exports.loginDonor = asyncHandler(async (req, res) => {
       message: 'Login successful',
       token: `Bearer ${token}`,
       donorId: existingDonor._id,
-      lastDonationDate : existingDonor.lastDonationDate
+      lastDonationDate: existingDonor.lastDonationDate
     });
   } catch (error) {
-      console.error('Error during login:', error.message);
-      return errorResponse(res, 500, 'Error during login', error.message);
+    error.statusCode = error.statusCode || 500;
+    throw error;
   }
 });
 
 // Controller for admins to search donors
 exports.searchDonor = asyncHandler(async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    const err = new Error('Email is required for search');
+    err.statusCode = 400;
+    throw err;
+  }
+
   try {
-    const { email } = req.query;
-    
-    if (!email) {
-      return errorResponse(res, 400, 'Email is required for search');
-    }
-    
     const donor = await donorService.findDonorByEmail(email);
-    
+
     if (!donor) {
-      console.log("donor not found");
-      return res.status(404).json({
-        success: false,
-        message: 'Donor not found'
-      });
+      const err = new Error('Donor not found');
+      err.statusCode = 404;
+      throw err;
     }
-    
+
     res.status(200).json({
       success: true,
       donor: {
@@ -120,45 +114,53 @@ exports.searchDonor = asyncHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    return errorResponse(res, 500, 'Error searching for donor', error.message);
+    error.statusCode = error.statusCode || 500;
+    throw error;
   }
 });
 
 // Controller for admins to create donor
 exports.createDonorByAdmin = asyncHandler(async (req, res) => {
+  const { name, email, bloodGroup, city, dob } = req.body;
+
+  if (!name || !email || !bloodGroup || !city || !dob) {
+    const err = new Error('Name, email, blood group, city and dob are required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const password = generateRandomPassword(10);
+
   try {
-    const { name, email, password, bloodGroup, city, dob } = req.body;
-    
-    // Validate required fields
-    if (!name || !email || !bloodGroup || !city || !dob) {
-      return errorResponse(res, 400, 'Name, email, password, blood group, city and dob are required');
-    }
-    
-    // Create donor
+    await transporter.sendMail({
+      from: `"Blood Bank App" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Donor Login Password",
+      text: `Hello ${name},\n\nYou have been registered as a donor.\nYour login password is: ${password}\nPlease log in and change your password.`,
+    });
+
     const donor = await donorService.createDonor({
       name,
       email,
-      password, 
+      password,
       bloodGroup,
       city,
       dob
     });
-    
+
     res.status(201).json({
       success: true,
       message: 'Donor created successfully',
       donorId: donor._id
     });
   } catch (error) {
-    return errorResponse(res, 400, error.message);
+    error.statusCode = error.statusCode || 400;
+    throw error;
   }
 });
 
-exports.getDonations = async(req,res) => {
-  try{
-    // const donor = req.donor;
-    // if(!donor) errorResponse(res,401,"donor not found");
-    
+exports.getDonations = asyncHandler(async (req, res) => {
+  try {
     const donorWithDonations = await Donor.findById(req.donor.id)
       .populate({
         path: 'donations',
@@ -170,36 +172,46 @@ exports.getDonations = async(req,res) => {
         }
       });
 
+    if (!donorWithDonations) {
+      const err = new Error('Donor not found');
+      err.statusCode = 404;
+      throw err;
+    }
+
     res.status(200).json({
       success: true,
       donations: donorWithDonations.donations,
     });
-  }catch(error){
-    errorResponse(res,500,"error fetching donations",error);
+  } catch (error) {
+    error.statusCode = error.statusCode || 500;
+    throw error;
   }
-}
+});
 
-exports.getBloodBanks = async(req,res) => {
+exports.getBloodBanks = asyncHandler(async (req, res) => {
   try {
-    let {city} = req.query;
+    let { city } = req.query;
 
-    if(!city){
-      if(!req.donor) errorResponse(res,400,"Please provide city or LOGIN");
-      // let donor = await Donor.findById(req.admin.id)
+    if (!city) {
+      if (!req.donor) {
+        const err = new Error('Please provide city or login first');
+        err.statusCode = 400;
+        throw err;
+      }
       city = req.donor.city;
     }
-    
-    const bloodbanksInCity = await BloodBank.find({city : city});
 
-    const bloodbanks = bloodbanksInCity.map(bloodbank => bloodbank.name);
-    
-    return res.status(200).json({
-      success : true,
-      city : city,
+    const bloodbanksInCity = await BloodBank.find({ city });
+
+    const bloodbanks = bloodbanksInCity.map(b => b.name);
+
+    res.status(200).json({
+      success: true,
+      city,
       bloodbanks
     });
-
   } catch (error) {
-    errorResponse(res,500,"Error getting bloodbanks", error);
+    error.statusCode = error.statusCode || 500;
+    throw error;
   }
-}
+});

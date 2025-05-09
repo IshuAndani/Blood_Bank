@@ -1,12 +1,12 @@
 const {errorResponse} = require('../utils/errorResponse');
 
 exports.errorMiddleware = (err, req, res, next) => {
-    console.error(err.stack);
+    // console.error(err.stack);
     
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
   
-    errorResponse(res,statusCode,message);
+    errorResponse(res,statusCode,message,err);
     // res.status(statusCode).json({
     //     success: false,
     //     message,

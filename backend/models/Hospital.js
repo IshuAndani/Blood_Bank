@@ -25,12 +25,12 @@ const hospitalSchema = new mongoose.Schema({
             ref: 'Admin'
         }]
     },
-    BloodRequest: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'BloodRequest'
-        }
-    ]
+    // BloodRequest: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'BloodRequest'
+    //     }
+    // ]
 }, {timestamps: true});
 
 hospitalSchema.pre('save', function (next) {

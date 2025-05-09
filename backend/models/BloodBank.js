@@ -30,17 +30,17 @@ const bloodBankSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Admin'
         }],
-        observer: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Admin'
-        }]
+        // observer: [{
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: 'Admin'
+        // }]
     },
-    BloodRequest: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'BloodRequest'
-        }
-    ]
+    // BloodRequest: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'BloodRequest'
+    //     }
+    // ]
 }, {timestamps: true});
 
 bloodBankSchema.pre('save', function (next) {

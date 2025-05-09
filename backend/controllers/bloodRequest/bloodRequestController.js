@@ -4,6 +4,9 @@ const { BloodRequest } = require("../../models/BloodRequest");
 const { Inventory } = require('../../models/Inventory');
 const { Hospital } = require("../../models/Hospital");
 const { errorResponse } = require("../../utils/errorResponse");
+const { Donation } = require("../../models/Donation");
+const { threshold } = require('../../../shared/constants/threshold');
+const { createShortage } = require('../../utils/createShortage');
 
 exports.createBloodRequest = async(req,res) => {
     const session = await mongoose.startSession();
@@ -13,20 +16,20 @@ exports.createBloodRequest = async(req,res) => {
         if(!bloodGroup || !BloodBankId) {
             await session.abortTransaction();
             session.endSession();
-            errorResponse(res,400,"bloodGroup and BloodBankId are required");
+            return errorResponse(res,400,"bloodGroup and BloodBankId are required");
         }
 
         const bloodBank = await BloodBank.findById(BloodBankId);
         if(!bloodBank){
             await session.abortTransaction();
             session.endSession();
-            errorResponse(res,400,"cannot find bloodbank");
+            return errorResponse(res,400,"cannot find bloodbank");
         }
         const hospital = await Hospital.findById(req.admin.workplaceId);
         if(!hospital){
             await session.abortTransaction();
             session.endSession();
-            errorResponse(res,400,"cannot find hospital");
+            return errorResponse(res,400,"cannot find hospital");
         }
 
         const bloodRequest = new BloodRequest({
@@ -37,11 +40,11 @@ exports.createBloodRequest = async(req,res) => {
         })
         await bloodRequest.save({session});
 
-        hospital.BloodRequest.push(bloodRequest._id);
-        await hospital.save({session});
+        // hospital.BloodRequest.push(bloodRequest._id);
+        // await hospital.save({session});
 
-        bloodBank.BloodRequest.push(bloodRequest._id);
-        await bloodBank.save({session});
+        // bloodBank.BloodRequest.push(bloodRequest._id);
+        // await bloodBank.save({session});
 
         await session.commitTransaction();
         session.endSession();
@@ -56,51 +59,57 @@ exports.createBloodRequest = async(req,res) => {
         await session.abortTransaction();
         session.endSession();
         // console.error("Error Creating BloodRequest" , error);
-        errorResponse(res,500,"Error Creating BloodRequest", error);
+        return errorResponse(res,500,"Error Creating BloodRequest", error);
     }
 }
 
 exports.getBloodRequests = async (req,res) => {
     try{
         const admin = req.admin;
-        let workplace;
-        if (admin.workplaceType === "Hospital") {
-            workplace = await Hospital.findById(admin.workplaceId)
-                .populate({
-                    path: 'BloodRequest',
-                    populate: {
-                        path: 'BloodBank',
-                        select: 'name city'
-                    }
-                });
-        } else if (admin.workplaceType === "BloodBank") {
-            workplace = await BloodBank.findById(admin.workplaceId)
-                .populate({
-                    path: 'BloodRequest',
-                    populate: {
-                        path: 'Hospital',
-                        select: 'name city'
-                    }
-                });
+        let bloodrequests;
+        if(admin.workplaceType === "Hospital"){
+            bloodrequests = BloodRequest.find({Hospital : admin.workplaceId}).populate('BloodBank');
         }
+        else if(admin.workplaceType === "BloodBank"){
+            bloodrequests = BloodRequest.find({BloodBank : admin.workplaceId}).populate('Hospital');
+        }
+        // let workplace;
+        // if (admin.workplaceType === "Hospital") {
+        //     workplace = await Hospital.findById(admin.workplaceId)
+        //         .populate({
+        //             path: 'BloodRequest',
+        //             populate: {
+        //                 path: 'BloodBank',
+        //                 select: 'name city'
+        //             }
+        //         });
+        // } else if (admin.workplaceType === "BloodBank") {
+        //     workplace = await BloodBank.findById(admin.workplaceId)
+        //         .populate({
+        //             path: 'BloodRequest',
+        //             populate: {
+        //                 path: 'Hospital',
+        //                 select: 'name city'
+        //             }
+        //         });
+        // }
         
         else{
-            errorResponse(res,400,"workplaceType not valid");
+            return errorResponse(res,400,"workplaceType not valid");
         }
-        if(!workplace){
-            errorResponse(res,400,"workplace not found");
-        }
+        // if(!workplace){
+        //     errorResponse(res,400,"workplace not found");
+        // }
         
         // let bloodRequests = await workplace.populate('BloodRequest', '');
 
         res.status(200).json({
             success : true,
-            bloodRequests : workplace.BloodRequest
-        })
-
+            bloodrequests 
+        });
     }
     catch(error){
-        errorResponse(res,500,"Error fetching bloodrequests", error);
+        return errorResponse(res,500,"Error fetching bloodrequests", error);
     }
 }
 
@@ -133,30 +142,40 @@ exports.updateBloodRequestStatus = async(req,res) => {
         if(bloodRequest.status !== "pending"){
             await session.abortTransaction();
             session.endSession();
-            errorResponse(res,404,"BloodRequest already settled");
+            return errorResponse(res,404,"BloodRequest already settled");
         }
 
         bloodRequest.status = status;
         if(status === "rejected" && reason) bloodRequest.rejectReason = reason;
 
-        await bloodRequest.save({session});
-
         if(status === "approved"){
-            // const inventoryId = await BloodBank.findById(req.admin.workplaceId).inventory;
+            const bloodbank = await BloodBank.findById(req.admin.workplaceId);
             const inventory = await Inventory.findOne({bloodBank : req.admin.workplaceId});
             if(!inventory){
                 await session.abortTransaction();
                 session.endSession();
-                errorResponse(res,404,"inventory not found ");
+                return errorResponse(res,404,"inventory not found ");
             }
             if(inventory.bloodGroups[bloodRequest.bloodGroup] <= 0) {
                 await session.abortTransaction();
                 session.endSession();
-                errorResponse(res,400,"Insufficient blood in inventory");
+                return errorResponse(res,400,"Insufficient blood in inventory");
             } 
             inventory.bloodGroups[bloodRequest.bloodGroup] -= 1;
+
+              if(inventory.bloodGroups[bloodRequest.bloodGroup] <= threshold){
+                createShortage(bloodRequest.BloodBank, bloodRequest.bloodGroup);
+              }
+            
+            const usedDonation = await Donation.findOne({status : "stored", donatedAt : req.admin.workplaceId}).sort({createdAt : 1}).session(session);
+            if(usedDonation){
+                usedDonation.status = "used";
+            }
+            await usedDonation.save({session});
             await inventory.save({session})
         }
+        await bloodRequest.save({session});
+
         await session.commitTransaction();
         session.endSession();
         res.status(201).json({
@@ -166,6 +185,6 @@ exports.updateBloodRequestStatus = async(req,res) => {
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
-        errorResponse(res,500,"error updating bloodreq", error);
+        return errorResponse(res,500,"error updating bloodreq", error);
     }
 }

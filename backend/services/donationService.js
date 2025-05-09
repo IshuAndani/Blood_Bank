@@ -3,6 +3,7 @@ const moment = require('moment');
 const { Donation } = require('../models/Donation');
 const donorService = require('./donorService');
 const inventoryService = require('./inventoryService');
+const { donationExpireTime, donorEligibleTime } = require('../config/constants');
 
 // Create new donation with transaction to ensure all updates succeed or fail together
 exports.createDonation = async (donationData) => {
@@ -18,12 +19,11 @@ exports.createDonation = async (donationData) => {
     if (donor.lastDonationDate) {
       const lastDonationDate = new Date(donor.lastDonationDate);
       const currentDate = new Date();
-      const daysSinceLastDonation = Math.floor((currentDate - lastDonationDate) / (1000 * 60 * 60 * 24)); // Calculate difference in days
-
+      // const daysSinceLastDonation = Math.floor((currentDate - lastDonationDate) / (1000 * 60 * 60 * 24)); // Calculate difference in days
       // If less than 56 days have passed, throw an error
-      if (daysSinceLastDonation < 56) {
+      if (currentDate - lastDonationDate < donorEligibleTime) {
         const nextDonationDate = new Date(lastDonationDate);
-        nextDonationDate.setDate(lastDonationDate.getDate() + 56); // Calculate the date when they can donate next
+        nextDonationDate.setDate(lastDonationDate.getDate() + donorEligibleTime/(1000*60*60*24)); // Calculate the date when they can donate next
         const errorMessage = `You cannot donate blood yet. You can donate on ${nextDonationDate.toISOString().split('T')[0]}.`;
         throw new Error(errorMessage);
       }

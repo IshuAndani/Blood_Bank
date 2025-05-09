@@ -1,0 +1,7 @@
+// const donationExpireTime = 42*24*60*60*1000;
+// const donorEligibleTime = 56*24*60*60*1000;
+const donationExpireTime = 20*1000;
+const donorEligibleTime = 60*1000;
+const cronTime = process.env.CRON_TIME;
+const minAgeForDonor = 18;
+module.exports = {donationExpireTime, donorEligibleTime, cronTime, minAgeForDonor};

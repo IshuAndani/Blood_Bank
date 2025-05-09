@@ -32,10 +32,8 @@ exports.createBloodBank = async (req, res) => {
       city,
       employees: {
         headadmin: [],
-        admin: [],
-        observer: []
-      },
-      BloodRequest: [],
+        admin: []
+      }
     });
 
     await newBloodBank.save();

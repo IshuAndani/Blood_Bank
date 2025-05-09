@@ -1,34 +1,35 @@
 const { Admin } = require('../../models/Admin');
 const { comparePassword } = require('../../utils/passwordUtils');
 const { cleanString } = require('../../utils/cleanString');
-const { errorResponse } = require('../../utils/errorResponse');
-const { asyncHandler } = require('../../utils/asyncHandler');
 const { generateToken } = require('../../utils/generateToken');
 
 // Login controller
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     let { email, password } = req.body;
-    email = cleanString(email).toLowerCase(); // Clean email input
-    // Find admin by email
+
+    if (!email || !password) {
+      const err = new Error('All fields are required');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    email = cleanString(email).toLowerCase();
+
     const admin = await Admin.findOne({ email });
     if (!admin) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+      const err = new Error('Invalid credentials');
+      err.statusCode = 401;
+      throw err;
     }
 
-    // Compare passwords
     const isMatch = await comparePassword(password, admin.password);
     if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+      const err = new Error('Invalid credentials');
+      err.statusCode = 401;
+      throw err;
     }
 
-    // Create JWT payload
     const payload = {
       id: admin._id,
       role: admin.role,
@@ -36,7 +37,6 @@ exports.login = async (req, res) => {
       workplaceId: admin.workplaceId
     };
 
-    // Generate token
     const token = generateToken(payload);
 
     res.status(200).json({
@@ -46,10 +46,10 @@ exports.login = async (req, res) => {
       adminId: admin._id,
       role: admin.role,
       workplaceId: admin.workplaceId,
-      workplaceType : admin.workplaceType
+      workplaceType: admin.workplaceType
     });
   } catch (error) {
-    console.error('Error during login:', error.message);
-    return errorResponse(res, 500, 'Error during login', error.message);
+    // Forward error to global error handler
+    next(error);
   }
 };
