@@ -1,96 +1,31 @@
-const { BloodBank } = require('../../models/BloodBank');
-const { Inventory } = require('../../models/Inventory');
 const { BLOOD_GROUP_MAP } = require('../../../shared/constants/bloodGroups');
-const inventoryService = require('../../services/inventoryService');
-const { asyncHandler } = require('../../utils/asyncHandler');
-const { errorResponse } = require('../../utils/errorResponse');
+const {asyncHandler} = require('../../utils/asyncHandler');
+const { sendResponse } = require('../../utils/response.util');
+const { AppError } = require('../../utils/error.handler');
+const bloodBankService = require('../../services/bloodBankService');
 
-exports.createBloodBank = async (req, res) => {
-  try {
-    const { name, city } = req.body;
+// @desc    Create a new blood bank
+exports.createBloodBank = asyncHandler(async (req, res) => {
+  const { name, city } = req.body;
+  const createdById = req.admin.id; // from middleware if needed later
 
-    if(!name || !city) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name and city are required'
-      });
+  const { bloodBank, inventory } = await bloodBankService.createBloodBank(name, city, createdById);
+
+  return sendResponse(res, 201, true, 'Blood Bank created successfully', {
+    bloodBank,
+    inventory: {
+      id: inventory._id,
+      bloodGroups: inventory.bloodGroups
     }
+  });
+});
 
-    // Check if the blood bank with the same name already exists
-    const existingBloodBank = await BloodBank.findOne({ name });
-    if (existingBloodBank) {
-      return res.status(400).json({
-        success: false,
-        message: `Blood Bank with the name "${name}" already exists.`
-      });
-    }
-
-    const superadminId = req.admin.id; // from protect middleware
-
-    const newBloodBank = new BloodBank({
-      name,
-      city,
-      employees: {
-        headadmin: [],
-        admin: []
-      }
-    });
-
-    await newBloodBank.save();
-
-    // Create inventory for the new blood bank
-    const inventory = await inventoryService.createInventory(newBloodBank._id);
-    
-    // Update blood bank with inventory reference
-    newBloodBank.inventory = inventory._id;
-    await newBloodBank.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Blood Bank created successfully',
-      BloodBank: newBloodBank,
-      inventory: {
-        id: inventory._id,
-        bloodGroups: inventory.bloodGroups
-      }
-    });
-
-  } catch (error) {
-    console.error('Error creating blood bank:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error'
-    });
-  }
-};
-
-exports.getBloodBanksByBloodGroup = async (req, res) => {
-  const friendlyName = req.query.bloodGroup; // e.g., 'O-positive'
+// @desc    Get blood banks with available units of a specific blood group
+exports.getBloodBanksByBloodGroup = asyncHandler(async (req, res) => {
+  const friendlyName = req.query.bloodGroup;
   const actualKey = BLOOD_GROUP_MAP[friendlyName];
-  console.log(actualKey);
 
-  if (!actualKey) {
-    return res.status(400).json({ success: false, message: 'Blood group is required' });
-  }
+  const result = await bloodBankService.getBloodBanksByBloodGroup(actualKey);
 
-  try {
-    const inventories = await Inventory.find({ [`bloodGroups.${actualKey}`]: { $gt: 0 } })
-      .populate('bloodBank', 'id name city'); // only get name and city
-    console.log(inventories);
-    const result = inventories.map(inv => ({
-      id : inv.bloodBank?._id,
-      name: inv.bloodBank?.name,
-      city: inv.bloodBank?.city,
-      availableUnits: inv.bloodGroups[actualKey]
-    }));
-
-    return res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (err) {
-    console.error('Error in blood group search:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+  return sendResponse(res, 200, true, 'Matching blood banks found', result);
+});

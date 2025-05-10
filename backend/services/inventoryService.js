@@ -1,20 +1,16 @@
 const { Inventory } = require('../models/Inventory');
 const { Shortage } = require('../models/Shortage');
 const { threshold } = require('../../shared/constants/threshold');
+const { AppError } = require('../utils/error.handler');
 
 // Create inventory for a new blood bank
 exports.createInventory = async (bloodBankId) => {
   try {
-    const newInventory = new Inventory({
-      bloodBank: bloodBankId,
-      // Default values for blood groups are set in the schema
-    });
-    
+    const newInventory = new Inventory({ bloodBank: bloodBankId });
     await newInventory.save();
     return newInventory;
   } catch (error) {
-    console.error('Error creating inventory:', error);
-    throw new Error('Error creating inventory for blood bank');
+    throw new AppError('Error creating inventory for blood bank', 500,error);
   }
 };
 
@@ -22,18 +18,17 @@ exports.createInventory = async (bloodBankId) => {
 exports.addBloodToInventory = async (bloodBankId, bloodGroup, session = null) => {
   try {
     const inventory = await Inventory.findOne({ bloodBank: bloodBankId });
-    
+
     if (!inventory) {
-      throw new Error('Inventory not found for this blood bank');
+      throw new AppError('Inventory not found for this blood bank', 404);
     }
-    
-    // Update inventory with new blood units
+
     const updateQuery = {};
-    updateQuery[`bloodGroups.${bloodGroup}`] = 1; // No conversion needed
-    
+    updateQuery[`bloodGroups.${bloodGroup}`] = 1;
+
     const options = { new: true };
     if (session) options.session = session;
-    
+
     const updatedInventory = await Inventory.findOneAndUpdate(
       { bloodBank: bloodBankId },
       { $inc: updateQuery },
@@ -41,30 +36,35 @@ exports.addBloodToInventory = async (bloodBankId, bloodGroup, session = null) =>
     );
 
     const shortage = await Shortage.findOne({
-      bloodBank : bloodBankId,
-      bloodGroup : bloodGroup,
-      resolved : false
+      bloodBank: bloodBankId,
+      bloodGroup: bloodGroup,
+      resolved: false
     });
-    console.log("updated inventory amount = " + updatedInventory.bloodGroups[bloodGroup]);
-    if(shortage && updatedInventory.bloodGroups[bloodGroup] > threshold){
+
+    if (shortage && updatedInventory.bloodGroups[bloodGroup] > threshold) {
       shortage.resolved = true;
-      console.log("shortage resolved");
-      await shortage.save(session);
+      await shortage.save({ session });
     }
-    
+
     return updatedInventory;
   } catch (error) {
-    console.error('Error adding blood to inventory:', error);
-    throw new Error('Error updating inventory');
+    if (error instanceof AppError) throw error;
+    throw new AppError('Error updating inventory', 500,error);
   }
 };
 
 // Get inventory for a blood bank
 exports.getInventory = async (bloodBankId) => {
   try {
-    return await Inventory.findOne({ bloodBank: bloodBankId });
+    const inventory = await Inventory.findOne({ bloodBank: bloodBankId });
+
+    if (!inventory) {
+      throw new AppError('Inventory not found for this blood bank', 404);
+    }
+
+    return inventory;
   } catch (error) {
-    console.error('Error fetching inventory:', error);
-    throw new Error('Error fetching inventory data');
+    if (error instanceof AppError) throw error;
+    throw new AppError('Error fetching inventory data', 500,error);
   }
 };

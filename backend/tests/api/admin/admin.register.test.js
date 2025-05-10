@@ -19,7 +19,7 @@ describe("Admin Registration API using superadmin", () => {
             email : superAdmin.email,
             password : password
         });
-        token = res.body.token;
+        token = res.body.data.token;
         
         res = await request(app)
             .post('/api/v1/bloodbank/create')
@@ -29,7 +29,7 @@ describe("Admin Registration API using superadmin", () => {
                 city : "Bhopal"
             }
         );
-        bloodbankId = res.body.BloodBank._id;
+        bloodbankId = res.body.data.BloodBank._id;
 
 
         res = await request(app)
@@ -40,7 +40,7 @@ describe("Admin Registration API using superadmin", () => {
                 city : "Bhopal"
             }
         );
-        hospitalId = res.body.newHospital._id;
+        hospitalId = res.body.data.newHospital._id;
         console.log("superadmin : ", superAdmin);
         console.log("token : ",token);
         console.log("bloodbankId = ",bloodbankId);

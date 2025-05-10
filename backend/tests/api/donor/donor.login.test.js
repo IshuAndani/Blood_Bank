@@ -3,16 +3,17 @@ const app = require('../../../app');
 // const { Donor } = require('../../models/Donor');
 
 describe('Donor Login', () => {
-  const testDonor = {
-    name: 'Login User',
-    email: 'loginuser@example.com',
-    password: 'testpass123',
-    bloodGroup: 'O+',
-    city: 'Bhopal',
-    dob: new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000)
-  };
+  let testDonor;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    testDonor = {
+      name: 'Login User',
+      email: 'loginuser@example.com',
+      password: 'testpass123',
+      bloodGroup: 'O+',
+      city: 'Bhopal',
+      dob: new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000)
+    };
     await request(app).post('/api/public/donor/register').send(testDonor);
   });
 
@@ -26,7 +27,7 @@ describe('Donor Login', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.token).toMatch(/^Bearer/);
+    expect(res.body.data.token).toMatch(/^Bearer/);
     // expect(res.body.donorEmail).toBe(testDonor.email);
   });
 

@@ -27,8 +27,8 @@ describe('Admin Login API', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.token).toMatch(/^Bearer /);
-    expect(res.body.role).toBe('headadmin');
+    expect(res.body.data.token).toMatch(/^Bearer /);
+    expect(res.body.data.role).toBe('headadmin');
   });
 
   it('returns 401 for wrong password', async () => {
