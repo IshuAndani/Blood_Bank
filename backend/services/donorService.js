@@ -6,30 +6,51 @@ const { generateToken } = require('../utils/generateToken');
 const { transporter } = require('../utils/nodemailer');
 const { AppError } = require('../utils/error.handler');
 const validator = require('validator');
+const { isValidDOB, isValidCity, isValidBloodGroup } = require('../utils/validator');
+
 
 // Validate input
-const validateDonorInput = ({ name, email, password, bloodGroup, city, dob }) => {
-  if (!name || !email || !bloodGroup || !city || !dob) {
+const validateDonorInput = ({ name, email, password, bloodGroup, city, dob }, { isAdmin = false } = {}) => {
+  if (!name || !email || !bloodGroup || !city || !dob || (!isAdmin && !password)) {
     throw new AppError('All fields are required', 400);
   }
-  if (!validator.isEmail(email)) {
+
+  const cleanedName = cleanString(name);
+  const cleanedEmail = cleanString(email).toLowerCase();
+
+  if (!validator.isEmail(cleanedEmail)) {
     throw new AppError('Invalid email format', 400);
   }
-  if (password && password.length < 6) {
-    throw new AppError('Password must be at least 6 characters long', 400);
+
+  if (!isAdmin && password.length < 6) {
+    throw new AppError('Password must be at least 6 characters', 400);
   }
+
+  if (!isValidCity(city)) {
+    throw new AppError('Invalid city', 400);
+  }
+
+  if (!isValidBloodGroup(bloodGroup)) {
+    throw new AppError('Invalid blood group', 400);
+  }
+
+  if (!isValidDOB(dob)) {
+    throw new AppError('Invalid date of birth. Age must be between 18 and 65.', 400);
+  }
+
+  return { name: cleanedName, email: cleanedEmail };
 };
+
 
 // Register donor
 exports.registerDonor = async (data) => {
-  validateDonorInput(data);
+  const { name, email } = validateDonorInput(data);
 
-  const email = cleanString(data.email).toLowerCase();
   const existing = await Donor.findOne({ email });
   if (existing) throw new AppError('Donor with this email already exists', 409);
 
   const donor = await Donor.create({
-    name: cleanString(data.name),
+    name,
     email,
     password: data.password,
     bloodGroup: data.bloodGroup,
@@ -37,17 +58,20 @@ exports.registerDonor = async (data) => {
     dob: data.dob,
   });
 
-  return {
-    id: donor._id,
-    email: donor.email,
-  };
+  return { id: donor._id, email: donor.email };
 };
+
 
 // Login donor
 exports.loginDonor = async ({ email, password }) => {
   if (!email || !password) throw new AppError('Email and password are required', 400);
 
-  const donor = await Donor.findOne({ email: cleanString(email).toLowerCase() });
+  const cleanedEmail = cleanString(email).toLowerCase();
+  if (!validator.isEmail(cleanedEmail)) {
+    throw new AppError('Invalid email format', 400);
+  }
+
+  const donor = await Donor.findOne({ email: cleanedEmail });
   if (!donor) throw new AppError('Invalid credentials', 401);
 
   const isMatch = await comparePassword(password, donor.password);
@@ -60,6 +84,7 @@ exports.loginDonor = async ({ email, password }) => {
   });
 
   return {
+    name : donor.name,
     token: `Bearer ${token}`,
     donorId: donor._id,
     lastDonationDate: donor.lastDonationDate,
@@ -70,7 +95,10 @@ exports.loginDonor = async ({ email, password }) => {
 exports.searchDonor = async (email) => {
   if (!email) throw new AppError('Email is required for search', 400);
 
-  const donor = await Donor.findOne({ email: cleanString(email).toLowerCase() });
+  const cleanedEmail = cleanString(email).toLowerCase();
+  if(!validator.isEmail(cleanedEmail)) throw new AppError('Invalid email format', 400);
+
+  const donor = await Donor.findOne({ email: cleanedEmail});
   if (!donor) throw new AppError('Donor not found', 404);
 
   return {
@@ -85,42 +113,36 @@ exports.searchDonor = async (email) => {
 
 // Admin: Create donor and send email
 exports.createDonorByAdmin = async (data) => {
-  const { name, email, bloodGroup, city, dob } = data;
-  if (!name || !email || !bloodGroup || !city || !dob) {
-    throw new AppError('Name, email, blood group, city, and dob are required', 400);
-  }
+  const { name, email } = validateDonorInput(data, { isAdmin: true });
 
-  const cleanedEmail = cleanString(email).toLowerCase();
-  const existing = await Donor.findOne({ email: cleanedEmail });
+  const existing = await Donor.findOne({ email });
   if (existing) throw new AppError('Donor with this email already exists', 409);
 
   const password = generateRandomPassword(10);
 
   const donor = await Donor.create({
-    name: cleanString(name),
-    email: cleanedEmail,
+    name,
+    email,
     password,
-    bloodGroup,
-    city,
-    dob,
+    bloodGroup: data.bloodGroup,
+    city: data.city,
+    dob: data.dob,
   });
 
   try {
     await transporter.sendMail({
       from: `"Blood Bank App" <${process.env.EMAIL_USER}>`,
-      to: cleanedEmail,
+      to: email,
       subject: 'Your Donor Login Password',
       text: `Hello ${name},\n\nYou have been registered as a donor.\nYour login password is: ${password}\nPlease log in and change your password.`,
     });
   } catch (err) {
-    throw new AppError('Failed to send email to donor', 500,err);
+    throw new AppError('Failed to send email to donor', 500, err);
   }
 
-  return {
-    donorId: donor._id,
-    email: donor.email,
-  };
+  return { donorId: donor._id, email: donor.email, bloodGroup : donor.bloodGroup };
 };
+
 
 // Logged-in donor: get donations
 exports.getDonations = async (donorId) => {
@@ -142,6 +164,7 @@ exports.getDonations = async (donorId) => {
 // Get blood banks by city (query > fallback to donor city)
 exports.getBloodBanks = async (queryCity, donorCity) => {
   const city = queryCity || donorCity;
+  if(!isValidCity(city)) throw new AppError('Invalid city', 400);
   if (!city) throw new AppError('Please provide city or login first', 400);
 
   const bloodbanks = await BloodBank.find({ city }).select('name');
@@ -157,28 +180,6 @@ exports.findDonorByEmail = async (email) => {
 exports.findDonorById = async (id) => {
   const donor = await Donor.findById(id);
   if (!donor) throw new AppError('Donor not found', 404);
-  return donor;
-};
-
-// Utility: create donor
-exports.createDonor = async (donorData) => {
-  const name = cleanString(donorData.name);
-  const email = cleanString(donorData.email).toLowerCase();
-  const { bloodGroup, city, password, dob } = donorData;
-
-  const existing = await Donor.findOne({ email });
-  if (existing) throw new AppError('Donor with this email already exists', 409);
-
-  const donor = new Donor({
-    name,
-    email,
-    password,
-    bloodGroup,
-    city,
-    dob,
-  });
-
-  await donor.save();
   return donor;
 };
 

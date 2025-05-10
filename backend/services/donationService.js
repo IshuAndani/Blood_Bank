@@ -3,10 +3,11 @@ const { Donation } = require('../models/Donation');
 const { Inventory } = require('../models/Inventory');
 const donorService = require('./donorService');
 const inventoryService = require('./inventoryService');
-const { donationExpireTime, donorEligibleTime } = require('../config/constants');
+const { donationExpireTime } = require('../config/constants');
 const { AppError } = require('../utils/error.handler');
-const { threshold } = require('../../shared/constants/threshold');
+const { threshold } = require('../config/constants');
 const { createShortage } = require('../services/shortageService');
+const {isNotEligibleToDonate} = require('../utils/validator');
 
 exports.createDonation = async (donationData) => {
   const session = await mongoose.startSession();
@@ -24,16 +25,20 @@ exports.createDonation = async (donationData) => {
       throw new AppError('Donor not found', 404);
     }
 
-    if (donor.lastDonationDate) {
-      const lastDonation = new Date(donor.lastDonationDate);
-      const now = new Date();
-
-      if (now - lastDonation < donorEligibleTime) {
-        const eligibleDate = new Date(lastDonation);
-        eligibleDate.setDate(lastDonation.getDate() + donorEligibleTime / (1000 * 60 * 60 * 24));
-        throw new AppError(`You can donate on ${eligibleDate.toISOString().split('T')[0]}`, 400);
-      }
+    const date = isNotEligibleToDonate(donor.lastDonationDate);
+    if(date){
+      throw new AppError(`You can donate on ${date}`, 400);
     }
+    // if (donor.lastDonationDate) {
+    //   const lastDonation = new Date(donor.lastDonationDate);
+    //   const now = new Date();
+
+    //   if (now - lastDonation < donorEligibleTime) {
+    //     const eligibleDate = new Date(lastDonation);
+    //     eligibleDate.setDate(lastDonation.getDate() + donorEligibleTime / (1000 * 60 * 60 * 24));
+    //     throw new AppError(`You can donate on ${eligibleDate.toISOString().split('T')[0]}`, 400);
+    //   }
+    // }
 
     const newDonation = new Donation({
       donor: donorId,
@@ -73,10 +78,16 @@ exports.getDonationsByDonor = async (donorId) => {
       .sort({ createdAt: -1 })
       .populate('donatedAt', 'name city');
 
-    return {
-      count: donations.length,
-      donations
-    };
+      return {
+        count : donations.length,
+        donations : donations.map(donation => {
+          return {
+            name : donation.donatedAt.name,
+            city : donation.donatedAt.city,
+            date : donation.createdAt
+          }
+        })
+      }
   } catch (error) {
     console.error('Error fetching donor donations:', error);
     throw new AppError('Error fetching donation history', 500);
@@ -91,7 +102,7 @@ exports.getDonationsByBloodBank = async (bloodBankId) => {
 
     return {
       count: donations.length,
-      donations
+      donations : donations.map(donation => donation.donor)
     };
   } catch (error) {
     console.error('Error fetching blood bank donations:', error);

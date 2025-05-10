@@ -1,10 +1,12 @@
 const { Hospital } = require('../models/Hospital');
 const { AppError } = require('../utils/error.handler');
-
+const { isValidCity } = require('../utils/validator')
 exports.createHospital = async (name, city) => {
   if (!name || !city) {
     throw new AppError('Name and city are required', 400);
   }
+
+  if(!isValidCity(city)) throw new AppError('Invalid city', 400);
 
   const existingHospital = await Hospital.findOne({ name: name });
   if (existingHospital) {

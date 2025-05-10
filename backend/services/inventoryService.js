@@ -1,6 +1,6 @@
 const { Inventory } = require('../models/Inventory');
 const { Shortage } = require('../models/Shortage');
-const { threshold } = require('../../shared/constants/threshold');
+const { threshold } = require('../config/constants');
 const { AppError } = require('../utils/error.handler');
 
 // Create inventory for a new blood bank

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
-
+const {BLOOD_GROUPS} = require('../../shared/constants/bloodGroups');
 const BloodRequestSchema = new mongoose.Schema({
     bloodGroup : {
         type : String,
         required : true,
         enum : {
-            values : ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            values : BLOOD_GROUPS,
             message : '{VALUE} is not a valid blood group'
         }
     },

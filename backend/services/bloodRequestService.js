@@ -4,9 +4,10 @@ const { BloodBank } = require('../models/BloodBank');
 const { Hospital } = require('../models/Hospital');
 const { Inventory } = require('../models/Inventory');
 const { Donation } = require('../models/Donation');
-const { threshold } = require('../../shared/constants/threshold');
+const { threshold } = require('../config/constants');
 const { createShortage } = require('./shortageService');
 const { AppError } = require('../utils/error.handler');
+const{isValidBloodGroup} = require('../utils/validator');
 
 exports.createBloodRequest = async (data, admin) => {
   const session = await mongoose.startSession();
@@ -16,7 +17,8 @@ exports.createBloodRequest = async (data, admin) => {
     if (!bloodGroup || !BloodBankId) {
       throw new AppError('bloodGroup and BloodBankId are required', 400);
     }
-
+    if(!isValidBloodGroup(bloodGroup)) throw new AppError('Invalid blood group', 400);
+    
     const bloodBank = await BloodBank.findById(BloodBankId);
     if (!bloodBank) throw new AppError('Cannot find bloodbank', 400);
 
@@ -44,10 +46,10 @@ exports.createBloodRequest = async (data, admin) => {
 
 exports.getBloodRequests = async (admin) => {
   if (admin.workplaceType === 'Hospital') {
-    return BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank');
+    return BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank', 'name city');
   }
   if (admin.workplaceType === 'BloodBank') {
-    return BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital');
+    return BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital', 'name city');
   }
   throw new AppError('workplaceType not valid', 400);
 };

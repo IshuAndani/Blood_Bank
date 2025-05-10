@@ -2,6 +2,7 @@ const { BloodBank } = require('../models/BloodBank');
 const { Inventory } = require('../models/Inventory');
 const inventoryService = require('./inventoryService');
 const { AppError } = require('../utils/error.handler');
+const {isValidCity} = require('../utils/validator');
 
 const createBloodBank = async (name, city, createdById) => {
   if (!name || !city) {
@@ -12,6 +13,8 @@ const createBloodBank = async (name, city, createdById) => {
   if (existing) {
     throw new AppError(`Blood Bank with the name "${name}" already exists.`, 400);
   }
+  
+  if(!isValidCity(city)) throw new AppError('Invalid city', 400);
 
   const bloodBank = new BloodBank({
     name,

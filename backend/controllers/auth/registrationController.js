@@ -8,19 +8,8 @@ const { sendResponse } = require('../../utils/response.util');
 const { asyncHandler } = require('../../utils/asyncHandler');
 const mongoose = require('mongoose');
 
-// Helper: Validate if requester is allowed to create the given role
-const isRoleValidForRequester = (role, requesterRole) => {
-  if (requesterRole === 'superadmin') {
-    return ['headadmin', 'admin'].includes(role);
-  }
-  if (requesterRole === 'headadmin') {
-    return role === 'admin';
-  }
-  return false;
-};
-
 // Helper: Get and validate workplace
-const validateWorkplaceForSuperadmin = async (workplaceId, workplaceType) => {
+const validateWorkplace = async (workplaceId, workplaceType) => {
   if (!['BloodBank', 'Hospital'].includes(workplaceType)) {
     throw new AppError('Invalid workplace type. Must be BloodBank or Hospital.', 400);
   }
@@ -40,41 +29,35 @@ exports.registerEmployee = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, email, role: rawRole, workplaceType, workplaceId } = req.body;
+    const { name, email, workplaceType, workplaceId } = req.body;
     const requester = req.admin;
 
     if (!name || !email) {
       throw new AppError('Name and email are required.', 400);
     }
 
+    email = cleanString(email).toLowerCase();
+    if(!validator.isEmail()) throw new AppError('Invalid email format', 400);
+
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
       throw new AppError('Email already in use.', 400);
     }
 
-    let role = rawRole;
-    if (!isRoleValidForRequester(role, requester.role)) {
-      throw new AppError(`You are not authorized to create ${role}s.`, 403);
-    }
-
+    let role;
     let workplace;
     if (requester.role === 'superadmin') {
       if (!workplaceId || !workplaceType) {
         throw new AppError('Workplace ID and type are required for superadmin.', 400);
       }
-      workplace = await validateWorkplaceForSuperadmin(workplaceId, workplaceType);
-    } else if (requester.role === 'headadmin') {
+      workplace = await validateWorkplace(workplaceId, workplaceType);
+      role = "headadmin";
+    } else{
       role = 'admin'; // Enforce only 'admin' can be created
-      const Model = requester.workplaceType === 'BloodBank' ? BloodBank : Hospital;
-      workplace = await Model.findById(requester.workplaceId);
-      if (!workplace) {
-        throw new AppError('Workplace not found.', 404);
-      }
-    } else {
-      throw new AppError('Unauthorized to register employees.', 403);
+      workplace = await validateWorkplace(requester.workplaceId, requester.workplaceType);
     }
 
-    const assignedWorkplace = requester.role === 'superadmin' ? workplace._id : requester.workplaceId;
+    // const assignedWorkplace = requester.role === 'superadmin' ? workplace._id : requester.workplaceId;
     const password = generateRandomPassword(10);
     
     await transporter.sendMail({
@@ -90,7 +73,7 @@ exports.registerEmployee = asyncHandler(async (req, res) => {
       password,
       role,
       workplaceType: workplace.constructor.modelName,
-      workplaceId: assignedWorkplace
+      workplaceId: workplace._id
     });
 
     await newAdmin.save({ session });

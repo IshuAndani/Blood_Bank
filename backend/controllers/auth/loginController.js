@@ -5,6 +5,7 @@ const { generateToken } = require('../../utils/generateToken');
 const { AppError } = require('../../utils/error.handler');
 const { sendResponse } = require('../../utils/response.util');
 const { asyncHandler } = require('../../utils/asyncHandler');
+const validator = require('validator');
 
 exports.login = asyncHandler(async (req, res) => {
   let { email, password } = req.body;
@@ -14,6 +15,7 @@ exports.login = asyncHandler(async (req, res) => {
   }
 
   email = cleanString(email).toLowerCase();
+  if(!validator.isEmail(email)) throw new AppError('Invalid email format', 400);
 
   const admin = await Admin.findOne({ email });
   if (!admin) {

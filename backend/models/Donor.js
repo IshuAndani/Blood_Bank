@@ -3,7 +3,9 @@ const moment = require('moment'); // For date manipulation
 const { cleanString } = require('../utils/cleanString');
 const { hashedPassword } = require('../utils/passwordUtils');
 const { ALLOWED_CITIES } = require('../../shared/constants/cities'); 
-const { minAgeForDonor } = require('../config/constants');
+const { minAgeForDonor , maxAgeForDonor} = require('../config/constants');
+const {BLOOD_GROUPS} = require('../../shared/constants/bloodGroups');
+
 
 const donorSchema = new mongoose.Schema({
     name : {
@@ -26,7 +28,7 @@ const donorSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : {
-            values : ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            values : BLOOD_GROUPS,
             message : '{VALUE} is not a valid blood group'
         }
     },
@@ -44,7 +46,7 @@ const donorSchema = new mongoose.Schema({
         validate: {
           validator: function(dob) { 
             const age = moment().diff(moment(dob), 'years'); // Calculate age
-            return age >= minAgeForDonor; // Validator to check if age is >= 18
+            return age >= minAgeForDonor && agr <= maxAgeForDonor; // Validator to check if age is >= 18
           },
           message: 'Donor must be at least 18 years old.'
         }
