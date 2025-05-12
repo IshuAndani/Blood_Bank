@@ -1,97 +1,101 @@
 const { Admin } = require('../../models/Admin');
+const { Hospital } = require('../../models/Hospital');
 const { BloodBank } = require('../../models/BloodBank');
-const { errorResponse } = require('../../utils/errorResponse');
-const { toObjectId } = require('../../utils/helpers');
+const { transporter } = require('../../utils/nodemailer');
+const { generateRandomPassword } = require('../../utils/passwordUtils');
+const { AppError } = require('../../utils/error.handler');
+const { sendResponse } = require('../../utils/response.util');
 const { asyncHandler } = require('../../utils/asyncHandler');
+const mongoose = require('mongoose');
 
-// Helper function to check if role is valid
-const isRoleValidForRequester = (role, requesterRole) => {
-  if (requesterRole === 'superadmin') {
-    return ['headadmin', 'admin', 'observer'].includes(role);
-  } else if (requesterRole === 'headadmin') {
-    return ['admin', 'observer'].includes(role);
+// Helper: Get and validate workplace
+const validateWorkplace = async (workplaceId, workplaceType) => {
+  if (!['BloodBank', 'Hospital'].includes(workplaceType)) {
+    throw new AppError('Invalid workplace type. Must be BloodBank or Hospital.', 400);
   }
-  return false;
-};
 
-// Helper function to validate workplace for superadmin
-const validateWorkplaceForSuperadmin = async (workplace) => {
-  const bank = await BloodBank.findById(workplace);
-  if (!bank) {
-    throw new Error('Blood Bank not found.');
+  const Model = workplaceType === 'BloodBank' ? BloodBank : Hospital;
+  const workplace = await Model.findById(workplaceId);
+  if (!workplace) {
+    throw new AppError('Workplace not found.', 404);
   }
-  return bank;
+
+  return workplace;
 };
 
 // POST /api/auth/register
-exports.registerEmployee = async (req, res) => {
-  try {
-    const { name, email, password, role, workplace } = req.body;
-    const requester = req.admin; // Fetched from protect middleware (logged in admin)
+exports.registerEmployee = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Validate required fields
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'Name, email, password, and role are required.' });
+  try {
+    const { name, email, workplaceType, workplaceId } = req.body;
+    const requester = req.admin;
+
+    if (!name || !email) {
+      throw new AppError('Name and email are required.', 400);
     }
 
-    // Validate email uniqueness
+    email = cleanString(email).toLowerCase();
+    if(!validator.isEmail()) throw new AppError('Invalid email format', 400);
+
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
-      return res.status(400).json({ success: false, message: 'Email already in use.' });
+      throw new AppError('Email already in use.', 400);
     }
 
-    let bank;
-    // Validate role permissions
-    if (!isRoleValidForRequester(role, requester.role)) {
-      return res.status(403).json({ success: false, message: `You are not authorized to create ${role}s.` });
-    }
-
+    let role;
+    let workplace;
     if (requester.role === 'superadmin') {
-      if (!workplace) {
-        return res.status(400).json({ success: false, message: 'Workplace (blood bank) must be provided by superadmin.' });
+      if (!workplaceId || !workplaceType) {
+        throw new AppError('Workplace ID and type are required for superadmin.', 400);
       }
-      bank = await validateWorkplaceForSuperadmin(workplace);
-    } else if (requester.role === 'headadmin') {
-      bank = await BloodBank.findById(requester.workplace);
-      if (!bank) {
-        return res.status(404).json({ success: false, message: 'Blood Bank not found.' });
-      }
-    } else {
-      return res.status(403).json({ success: false, message: 'You are not authorized to create employees.' });
+      workplace = await validateWorkplace(workplaceId, workplaceType);
+      role = "headadmin";
+    } else{
+      role = 'admin'; // Enforce only 'admin' can be created
+      workplace = await validateWorkplace(requester.workplaceId, requester.workplaceType);
     }
 
-    // Set workplace
-    const assignedWorkplace = requester.role === 'superadmin' ? workplace : requester.workplace;
+    // const assignedWorkplace = requester.role === 'superadmin' ? workplace._id : requester.workplaceId;
+    const password = generateRandomPassword(10);
+    
+    await transporter.sendMail({
+      from: `"Blood Bank App" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your Admin Login Password',
+      text: `Hello ${name},\n\nYou have been registered as an admin.\nYour login password is: ${password}\nPlease log in and change your password.`
+    });
 
-    // Create new admin
     const newAdmin = new Admin({
       name,
       email,
-      password, 
+      password,
       role,
-      workplace: assignedWorkplace,
+      workplaceType: workplace.constructor.modelName,
+      workplaceId: workplace._id
     });
 
-    await newAdmin.save();
+    await newAdmin.save({ session });
 
-    // Add new employee to the workplace
-    bank.employees[role].push(newAdmin._id); 
-    await bank.save();
+    workplace.employees[role].push(newAdmin._id);
+    await workplace.save({ session });
 
-    res.status(201).json({
-      success: true,
-      message: 'Employee registered successfully.',
-      admin: {
-        id: newAdmin._id,
-        name: newAdmin.name,
-        email: newAdmin.email,
-        role: newAdmin.role,
-        workplace: newAdmin.workplace,
-      },
+    await session.commitTransaction();
+    session.endSession();
+
+    return sendResponse(res, 201, true, 'Employee registered successfully.', {
+      id: newAdmin._id,
+      name: newAdmin.name,
+      email: newAdmin.email,
+      role: newAdmin.role,
+      workplaceId: newAdmin.workplaceId,
+      workplaceType: newAdmin.workplaceType
     });
 
   } catch (error) {
-    console.error('Error in registerEmployee:', error.message);
-    return errorResponse(res, 500, 'Error in registerEmployee', error.message);
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-};
+});

@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 exports.hashedPassword = async (password) => {
     try{
@@ -19,4 +20,8 @@ exports.comparePassword = async (password, hashedPassword) => {
         console.error("Error comparing password:", error);
         throw new Error("Error comparing password");
     }
+}
+
+exports.generateRandomPassword = (length = 10) => {
+  return crypto.randomBytes(length).toString("base64").slice(0, length);
 }
