@@ -102,7 +102,7 @@ exports.getDonationsByBloodBank = async (bloodBankId) => {
 
     return {
       count: donations.length,
-      donations : donations.map(donation => donation.donor)
+      donations : donations.map(donation => ({donor : donation.donor, date : donation.createdAt}))
     };
   } catch (error) {
     console.error('Error fetching blood bank donations:', error);

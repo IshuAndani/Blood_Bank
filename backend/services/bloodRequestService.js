@@ -22,6 +22,9 @@ exports.createBloodRequest = async (data, admin) => {
     const bloodBank = await BloodBank.findById(BloodBankId);
     if (!bloodBank) throw new AppError('Cannot find bloodbank', 400);
 
+    const inventory = await Inventory.findOne({bloodBank : BloodBankId});
+    if(inventory.bloodGroups[bloodGroup] === 0) throw new AppError('No blood in the inventory of the blood bank!',400);
+
     const hospital = await Hospital.findById(admin.workplaceId);
     if (!hospital) throw new AppError('Cannot find hospital', 400);
 
@@ -46,10 +49,29 @@ exports.createBloodRequest = async (data, admin) => {
 
 exports.getBloodRequests = async (admin) => {
   if (admin.workplaceType === 'Hospital') {
-    return BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank', 'name city');
+    const bloodReqs =  await BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank', 'name city');
+    return bloodReqs.map(br => {
+      return {
+        name : br.BloodBank.name,
+        city : br.BloodBank.city,
+        date : br.createdAt,
+        bloodGroup : br.bloodGroup,
+        status : br.status
+      }
+    });
   }
   if (admin.workplaceType === 'BloodBank') {
-    return BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital', 'name city');
+    const bloodReqs =  await BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital', 'name city');
+    return bloodReqs.map(br => {
+      return {
+        id : br._id,
+        name : br.Hospital.name,
+        city : br.Hospital.city,
+        date : br.createdAt,
+        bloodGroup : br.bloodGroup,
+        status : br.status
+      }
+    })
   }
   throw new AppError('workplaceType not valid', 400);
 };

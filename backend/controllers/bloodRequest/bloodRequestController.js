@@ -9,7 +9,7 @@ exports.createBloodRequest = asyncHandler(async (req, res) => {
 
 exports.getBloodRequests = asyncHandler(async (req, res) => {
   const bloodRequests = await bloodRequestService.getBloodRequests(req.admin);
-  return sendResponse(res, 200, true, 'BloodRequests fetched successfully', { bloodRequests });
+  return sendResponse(res, 200, true, 'BloodRequests fetched successfully', bloodRequests);
 });
 
 exports.updateBloodRequestStatus = asyncHandler(async (req, res) => {

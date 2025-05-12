@@ -22,6 +22,7 @@ exports.createBloodBank = asyncHandler(async (req, res) => {
 
 // @desc    Get blood banks with available units of a specific blood group
 exports.getBloodBanksByBloodGroup = asyncHandler(async (req, res) => {
+  // console.log(req.query);
   const friendlyName = req.query.bloodGroup;
   const actualKey = BLOOD_GROUP_MAP[friendlyName];
 

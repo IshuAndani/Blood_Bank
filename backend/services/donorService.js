@@ -7,7 +7,8 @@ const { transporter } = require('../utils/nodemailer');
 const { AppError } = require('../utils/error.handler');
 const validator = require('validator');
 const { isValidDOB, isValidCity, isValidBloodGroup } = require('../utils/validator');
-
+const donationService = require('./donationService');
+const { Donation } = require('../models/Donation');
 
 // Validate input
 const validateDonorInput = ({ name, email, password, bloodGroup, city, dob }, { isAdmin = false } = {}) => {
@@ -101,13 +102,17 @@ exports.searchDonor = async (email) => {
   const donor = await Donor.findOne({ email: cleanedEmail});
   if (!donor) throw new AppError('Donor not found', 404);
 
+  const donations = await donationService.getDonationsByDonor(donor._id);
+
   return {
-    id: donor._id,
+    donorId: donor._id,
     name: donor.name,
     email: donor.email,
     bloodGroup: donor.bloodGroup,
     city: donor.city,
     lastDonationDate: donor.lastDonationDate,
+    dob: donor.dob,
+    ...donations
   };
 };
 
@@ -119,7 +124,7 @@ exports.createDonorByAdmin = async (data) => {
   if (existing) throw new AppError('Donor with this email already exists', 409);
 
   const password = generateRandomPassword(10);
-
+  console.log(password);
   const donor = await Donor.create({
     name,
     email,
@@ -146,19 +151,28 @@ exports.createDonorByAdmin = async (data) => {
 
 // Logged-in donor: get donations
 exports.getDonations = async (donorId) => {
-  const donor = await Donor.findById(donorId).populate({
-    path: 'donations',
-    select: 'createdAt donatedAt',
-    populate: {
-      path: 'donatedAt',
-      model: 'BloodBank',
-      select: 'name city',
+  const res = await Donation.find({donor : donorId}).populate('donatedAt','name city');
+  const donations = res.map(d => ({
+    BloodBank : {
+      name : d.donatedAt.name,
+      city : d.donatedAt.city
     },
-  });
+    date : d.createdAt
+  }))
+  return {donations};
+  // const donor = await Donor.findById(donorId).populate({
+  //   path: 'donations',
+  //   select: 'createdAt donatedAt',
+  //   populate: {
+  //     path: 'donatedAt',
+  //     model: 'BloodBank',
+  //     select: 'name city',
+  //   },
+  // });
 
-  if (!donor) throw new AppError('Donor not found', 404);
+  // if (!donor) throw new AppError('Donor not found', 404);
 
-  return donor.donations;
+  // return donor.donations;
 };
 
 // Get blood banks by city (query > fallback to donor city)

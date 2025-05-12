@@ -46,7 +46,7 @@ const donorSchema = new mongoose.Schema({
         validate: {
           validator: function(dob) { 
             const age = moment().diff(moment(dob), 'years'); // Calculate age
-            return age >= minAgeForDonor && agr <= maxAgeForDonor; // Validator to check if age is >= 18
+            return age >= minAgeForDonor && age <= maxAgeForDonor; // Validator to check if age is >= 18
           },
           message: 'Donor must be at least 18 years old.'
         }
