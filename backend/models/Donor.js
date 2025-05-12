@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
+const moment = require('moment'); // For date manipulation
 const { cleanString } = require('../utils/cleanString');
 const { hashedPassword } = require('../utils/passwordUtils');
+const { ALLOWED_CITIES } = require('../../shared/constants/cities'); 
+const { minAgeForDonor , maxAgeForDonor} = require('../config/constants');
+const {BLOOD_GROUPS} = require('../../shared/constants/bloodGroups');
+
 
 const donorSchema = new mongoose.Schema({
     name : {
@@ -23,7 +28,7 @@ const donorSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : {
-            values : ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            values : BLOOD_GROUPS,
             message : '{VALUE} is not a valid blood group'
         }
     },
@@ -31,8 +36,19 @@ const donorSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : {
-            values : ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
+            values : ALLOWED_CITIES,
             message : 'We are not operational in {VALUE} yet'  
+        }
+    },
+    dob: { 
+        type: Date, 
+        required: true, 
+        validate: {
+          validator: function(dob) { 
+            const age = moment().diff(moment(dob), 'years'); // Calculate age
+            return age >= minAgeForDonor && age <= maxAgeForDonor; // Validator to check if age is >= 18
+          },
+          message: 'Donor must be at least 18 years old.'
         }
     },
     donations : [
@@ -45,12 +61,12 @@ const donorSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    notifiedShortages: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Shortage'
-        }
-    ]
+    // notifiedShortages: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'Shortage'
+    //     }
+    // ]
 }, {timestamps: true});
 
 donorSchema.pre('save', function (next) {
