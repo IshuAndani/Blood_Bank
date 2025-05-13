@@ -49,7 +49,7 @@ exports.createBloodRequest = async (data, admin) => {
 
 exports.getBloodRequests = async (admin) => {
   if (admin.workplaceType === 'Hospital') {
-    const bloodReqs =  await BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank', 'name city');
+    const bloodReqs =  await BloodRequest.find({ Hospital: admin.workplaceId }).populate('BloodBank', 'name city').sort({createdAt : -1});
     return bloodReqs.map(br => {
       return {
         name : br.BloodBank.name,
@@ -61,7 +61,7 @@ exports.getBloodRequests = async (admin) => {
     });
   }
   if (admin.workplaceType === 'BloodBank') {
-    const bloodReqs =  await BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital', 'name city');
+    const bloodReqs =  await BloodRequest.find({ BloodBank: admin.workplaceId }).populate('Hospital', 'name city').sort({createdAt : -1});
     return bloodReqs.map(br => {
       return {
         id : br._id,
