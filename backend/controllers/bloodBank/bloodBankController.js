@@ -6,10 +6,10 @@ const bloodBankService = require('../../services/bloodBankService');
 
 // @desc    Create a new blood bank
 exports.createBloodBank = asyncHandler(async (req, res) => {
-  const { name, city } = req.body;
-  const createdById = req.admin.id; // from middleware if needed later
+  const { name, city, coordinates } = req.body;
+  const createdById = req.admin.id;
 
-  const { bloodBank, inventory } = await bloodBankService.createBloodBank(name, city, createdById);
+  const { bloodBank, inventory } = await bloodBankService.createBloodBank(name, city, coordinates);
 
   return sendResponse(res, 201, true, 'Blood Bank created successfully', {
     bloodBank,
@@ -29,4 +29,8 @@ exports.getBloodBanksByBloodGroup = asyncHandler(async (req, res) => {
   const result = await bloodBankService.getBloodBanksByBloodGroup(actualKey);
 
   return sendResponse(res, 200, true, 'Matching blood banks found', result);
+});
+
+exports.getBloodBanks = asyncHandler(async (req,res) => {
+  return sendResponse(res,200,true,'BloodBanks Fetched', await bloodBankService.getBloodBanks());
 });

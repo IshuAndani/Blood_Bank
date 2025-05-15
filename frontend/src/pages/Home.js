@@ -11,6 +11,8 @@ const Home = () => {
       navigate("/donations");
     } else if (workplaceType === "Hospital") {
       navigate("/bloodbanks");
+    }else if(role === "superadmin"){
+      navigate('/superadmin/bloodbanks')
     } else {
       navigate("/donor/login");
     }

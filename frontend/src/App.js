@@ -12,6 +12,14 @@ import BloodRequest from './pages/BloodRequest';
 import Donation from './pages/Donation';
 import Home from './pages/Home';
 import BloodBank from './pages/BloodBank';
+import CreateBloodBank from './pages/CreateBloodBank';
+import SelectLocation from './pages/SelectLocation';
+import CreateHospital from './pages/CreateHospital';
+import BloodBanks from './pages/superadmin/BloodBanks';
+import BloodBankDetails from './pages/superadmin/BloodBankDetails';
+import Hospitals from './pages/superadmin/Hospitals';
+import Donors from './pages/superadmin/Donors';
+import ChatBot from './pages/ChatBot';
 
 function App() {
   
@@ -45,6 +53,19 @@ function App() {
             <Route path='/donations' element={<Donation/>}/>
 
             <Route path='/bloodbanks' element={<BloodBank/>}/>
+
+            <Route path='/create/bloodbank' element={<CreateBloodBank/>}/>
+            <Route path='/create/hospital' element={<CreateHospital/>}/>
+            <Route path='/select-location' element={<SelectLocation/>}/>
+
+            <Route path="/superadmin/bloodbanks" element={<BloodBanks />} />
+            <Route path="/superadmin/bloodbanks/:id" element={<BloodBankDetails />} />
+
+            <Route path="/superadmin/hospitals" element={<Hospitals />} />
+            
+            <Route path="/superadmin/donors" element={<Donors/>} />
+
+            <Route path='/chatbot' element={<ChatBot/>}/>
             
           </Routes>
         </div>

@@ -34,6 +34,50 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
 
+            {(role === "donor") && (
+              <>
+                <li className="nav-item">
+                  <Link to="/chatbot" className="nav-link">
+                    Chat
+                  </Link>  
+                </li>
+              </>
+            )}
+
+            {(role === "superadmin" && (
+              <>
+                <li className="nav-item">
+                  <Link to="/create/bloodbank" className="nav-link">
+                    New BloodBank
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/create/hospital" className="nav-link">
+                    New Hospital
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/superadmin/bloodbanks" className="nav-link">
+                    BloodBanks
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/superadmin/hospitals" className="nav-link">
+                    Hospitals
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/superadmin/donors" className="nav-link">
+                    Donors
+                  </Link>
+                </li>
+              </>
+            ))}
+
             {(role === "admin" || role === "headadmin") && (
               <>
                 <li className="nav-item">
@@ -50,6 +94,17 @@ function Navbar() {
                   </li>
                 )}
               </>
+            )}
+
+            {(role === "headadmin") && (
+              <>
+                <li className="nav-item">
+                  <Link to="/admin/register" className="nav-link">
+                    New Admin
+                  </Link>  
+                </li>
+              </>
+              
             )}
 
             {!token ? (
