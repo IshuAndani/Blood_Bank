@@ -1,6 +1,6 @@
 import axios from 'axios';
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: 'https://blood-bank-viy0.onrender.com',
   withCredentials: true,
   validateStatus : function(status){
     return status < 500;
