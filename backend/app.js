@@ -7,7 +7,7 @@ const apiRoutes = require('./routes/api/apiRoutes');
 const { errorMiddleware } = require('./middlewares/errorMiddleware');
 
 const corsOptions = {
-    origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
+    origin: process.env.ALLOWED_ORIGIN || 'https://majestic-cascaron-2edb22.netlify.app/',
     methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials : true
