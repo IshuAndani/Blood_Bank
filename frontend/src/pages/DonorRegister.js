@@ -57,12 +57,12 @@ function DonorRegister() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-lg">
-        <h3 className="text-2xl font-semibold text-center mb-4">Donor Registration</h3>
+        <h3 className="text-2xl font-semibold text-red-500 text-center mb-4">Donor Registration</h3>
 
         {error && <div className="bg-red-100 text-red-700 p-2 mb-3 rounded">{error}</div>}
         {success && <div className="bg-green-100 text-green-700 p-2 mb-3 rounded">{success}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="">
           <input
             type="text"
             name="name"
@@ -106,7 +106,7 @@ function DonorRegister() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition duration-200"
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded transition duration-200"
           >
             Register
           </button>
@@ -120,7 +120,7 @@ function DonorRegister() {
             Admin Login
           </button>
           <button
-            className="w-1/2 ml-2 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 rounded transition duration-200"
+            className="w-1/2 ml-2 bg-blue-100 hover:bg-blue-200 text-green-500 py-2 rounded transition duration-200"
             onClick={() => navigate('/donor/login')}
           >
             Donor Login

@@ -37,7 +37,7 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen  px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-md p-6">
-        <h3 className="text-2xl font-semibold text-center mb-4 text-gray-800">
+        <h3 className="text-2xl font-semibold text-red-500 text-center mb-4 text-gray-800">
           Donor Login
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
