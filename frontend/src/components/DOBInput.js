@@ -14,7 +14,7 @@ export default function DOBInput({ handleChange }){
 
   return (
       <>     
-        <label htmlFor="dob"> Date of Birth : </label>
+        <label htmlFor="dob" className='text-black'> Date of Birth : </label>
         <input
           type="date"
           name="dob"
