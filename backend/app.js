@@ -8,7 +8,7 @@ const { errorMiddleware } = require('./middlewares/errorMiddleware');
 // ✅ Allowed Origins — Add any other frontend URLs here
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://majestic-cascaron-2edb22.netlify.app'
+  'https://blood-bank-management-uitrgpv.netlify.app'
 ];
 
 // ✅ CORS Options
