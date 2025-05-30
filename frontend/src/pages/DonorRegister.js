@@ -55,44 +55,74 @@ function DonorRegister() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card p-4 shadow" style={{ maxWidth: '500px', width: '100%' }}>
-        <h3 className="text-center mb-3">Donor Registration</h3>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-lg">
+        <h3 className="text-2xl font-semibold text-center mb-4">Donor Registration</h3>
 
-        {error && <div className="alert alert-danger py-1">{error}</div>}
-        {success && <div className="alert alert-success py-1">{success}</div>}
+        {error && <div className="bg-red-100 text-red-700 p-2 mb-3 rounded">{error}</div>}
+        {success && <div className="bg-green-100 text-green-700 p-2 mb-3 rounded">{success}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-2">
-            <input type="text" name="name" placeholder="Name" className="form-control" required onChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <input type="email" name="email" placeholder="Email" className="form-control" required onChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <input type="password" name="password" placeholder="Password" minLength="6" className="form-control" required onChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" className="form-control" required onChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <CITYSelect handleChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <BGSelect handleChange={handleChange} />
-          </div>
-          <div className="mb-2">
-            <DOBInput handleChange={handleChange} />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            required
+            onChange={handleChange}
+          />
 
-          <button type="submit" className="btn btn-primary w-100 mt-2">Register</button>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            required
+            onChange={handleChange}
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            minLength="6"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            required
+            onChange={handleChange}
+          />
+
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+            required
+            onChange={handleChange}
+          />
+
+          <CITYSelect handleChange={handleChange} />
+          <BGSelect handleChange={handleChange} />
+          <DOBInput handleChange={handleChange} />
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition duration-200"
+          >
+            Register
+          </button>
         </form>
 
-        <div className="d-flex justify-content-between mt-4">
-          <button className="btn btn-outline-secondary w-48" onClick={() => navigate('/admin/login')}>
+        <div className="flex justify-between mt-4">
+          <button
+            className="w-1/2 mr-2 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded transition duration-200"
+            onClick={() => navigate('/admin/login')}
+          >
             Admin Login
           </button>
-          <button className="btn btn-outline-primary w-48" onClick={() => navigate('/donor/login')}>
+          <button
+            className="w-1/2 ml-2 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 rounded transition duration-200"
+            onClick={() => navigate('/donor/login')}
+          >
             Donor Login
           </button>
         </div>
