@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-function Navbar() {
+const Navbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
@@ -14,17 +14,58 @@ function Navbar() {
     navigate("/");
   };
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const toggleMenu = () => setIsOpen((prev) => !prev);
+
+  const renderRoleLinks = () => {
+    switch (role) {
+      case "superadmin":
+        return (
+          <>
+            <NavbarLink to="/create/bloodbank" label="New BloodBank" />
+            <NavbarLink to="/create/hospital" label="New Hospital" />
+            <NavbarLink to="/superadmin/bloodbanks" label="BloodBanks" />
+            <NavbarLink to="/superadmin/hospitals" label="Hospitals" />
+            <NavbarLink to="/superadmin/donors" label="Donors" />
+          </>
+        );
+      case "headadmin":
+        return (
+          <>
+            <NavbarLink to="/blood-requests" label="Blood Requests" />
+            <NavbarLink to="/admin/register" label="New Admin" />
+            {workplaceType === "BloodBank" && (
+              <NavbarLink to="/searchDonor" label="New Donation" />
+            )}
+          </>
+        );
+      case "admin":
+        return (
+          <>
+            <NavbarLink to="/blood-requests" label="Blood Requests" />
+            {workplaceType === "BloodBank" && (
+              <NavbarLink to="/searchDonor" label="New Donation" />
+            )}
+          </>
+        );
+      case "donor":
+        return <NavbarLink to="/chatbot" label="Chat" />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <nav className="bg-primary text-white">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link to="/" className="text-xl font-bold">
+        <Link to="/" className="text-xl text-white font-bold">
           Blood Bank
         </Link>
+
+        {/* Hamburger Menu Button */}
         <button
           className="lg:hidden text-white focus:outline-none"
           onClick={toggleMenu}
+          aria-label={isOpen ? "Close menu" : "Open menu"}
         >
           <svg
             className="h-6 w-6 fill-current"
@@ -46,87 +87,19 @@ function Navbar() {
           </svg>
         </button>
 
+        {/* Menu Links */}
         <div
           className={`${
             isOpen ? "block" : "hidden"
           } w-full lg:flex lg:items-center lg:w-auto`}
         >
           <ul className="flex flex-col lg:flex-row lg:space-x-6 mt-4 lg:mt-0">
-            {(role === "donor") && (
-              <li>
-                <Link to="/chatbot" className="block py-2 lg:py-0 hover:underline">
-                  Chat
-                </Link>
-              </li>
-            )}
-
-            {role === "superadmin" && (
-              <>
-                <li>
-                  <Link to="/create/bloodbank" className="block py-2 lg:py-0 hover:underline">
-                    New BloodBank
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/create/hospital" className="block py-2 lg:py-0 hover:underline">
-                    New Hospital
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/superadmin/bloodbanks" className="block py-2 lg:py-0 hover:underline">
-                    BloodBanks
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/superadmin/hospitals" className="block py-2 lg:py-0 hover:underline">
-                    Hospitals
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/superadmin/donors" className="block py-2 lg:py-0 hover:underline">
-                    Donors
-                  </Link>
-                </li>
-              </>
-            )}
-
-            {(role === "admin" || role === "headadmin") && (
-              <>
-                <li>
-                  <Link to="/blood-requests" className="block py-2 lg:py-0 hover:underline">
-                    Blood Requests
-                  </Link>
-                </li>
-                {workplaceType === "BloodBank" && (
-                  <li>
-                    <Link to="/searchDonor" className="block py-2 lg:py-0 hover:underline">
-                      New Donation
-                    </Link>
-                  </li>
-                )}
-              </>
-            )}
-
-            {role === "headadmin" && (
-              <li>
-                <Link to="/admin/register" className="block py-2 lg:py-0 hover:underline">
-                  New Admin
-                </Link>
-              </li>
-            )}
+            {renderRoleLinks()}
 
             {!token ? (
               <>
-                <li>
-                  <Link to="/donor/register" className="block py-2 lg:py-0 hover:underline">
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/donor/login" className="block py-2 lg:py-0 hover:underline">
-                    Login
-                  </Link>
-                </li>
+                <NavbarLink to="/donor/register" label="Register" />
+                <NavbarLink to="/donor/login" label="Login" />
               </>
             ) : (
               <li>
@@ -143,6 +116,17 @@ function Navbar() {
       </div>
     </nav>
   );
-}
+};
+
+/**
+ * Reusable Link component for nav items
+ */
+const NavbarLink = ({ to, label }) => (
+  <li>
+    <Link to={to} className="block py-1 lg:py-0 hover:underline">
+      {label}
+    </Link>
+  </li>
+);
 
 export default Navbar;
