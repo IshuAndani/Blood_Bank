@@ -35,43 +35,62 @@ const Login = () => {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card p-4 shadow" style={{ maxWidth: '400px', width: '100%' }}>
-        <h3 className="text-center mb-4">Donor Login</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-md p-6">
+        <h3 className="text-2xl font-semibold text-center mb-4 text-gray-800">
+          Donor Login
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <input
               type="email"
-              className="form-control"
+              className="w-full px-4 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
             />
           </div>
-
-          <div className="mb-3">
+          <div>
             <input
               type="password"
-              className="form-control"
+              className="w-full px-4 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
+          <button
+            type="submit"
+            className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition"
+          >
+            Login
+          </button>
 
-          <button type="submit" className="btn btn-primary w-100 mb-2">Login</button>
-
-          {error && <div className="alert alert-danger py-1 my-2">{error}</div>}
-          {success && <div className="alert alert-success py-1 my-2">{success}</div>}
+          {error && (
+            <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md text-sm border border-red-200">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-100 text-green-700 px-4 py-2 rounded-md text-sm border border-green-200">
+              {success}
+            </div>
+          )}
         </form>
 
-        <div className="d-flex justify-content-between mt-3">
-          <button className="btn btn-outline-secondary w-48" onClick={() => navigate('/admin/login')}>
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <button
+            className="flex-1 border border-gray-400 text-gray-700 py-2 rounded-lg hover:bg-gray-100 transition"
+            onClick={() => navigate('/admin/login')}
+          >
             Admin Login
           </button>
-          <button className="btn btn-outline-success w-48" onClick={() => navigate('/donor/register')}>
+          <button
+            className="flex-1 border border-green-400 text-green-700 py-2 rounded-lg hover:bg-green-50 transition"
+            onClick={() => navigate('/donor/register')}
+          >
             Donor Register
           </button>
         </div>
