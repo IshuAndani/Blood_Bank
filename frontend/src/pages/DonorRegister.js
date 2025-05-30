@@ -62,7 +62,7 @@ function DonorRegister() {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-3 rounded">{error}</div>}
         {success && <div className="bg-green-100 text-green-700 p-2 mb-3 rounded">{success}</div>}
 
-        <form onSubmit={handleSubmit} className="">
+        <form onSubmit={handleSubmit} className="space-y-1">
           <input
             type="text"
             name="name"
