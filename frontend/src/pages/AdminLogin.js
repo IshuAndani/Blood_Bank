@@ -15,7 +15,7 @@ function AdminLogin() {
     setSuccess('');
 
     try {
-      const res = await api.post('/api/v1/admin/login', { email, password });
+      const res = await api.post('/admin/login', { email, password });
 
       if (res.data.success) {
         setSuccess(res.data.message);
