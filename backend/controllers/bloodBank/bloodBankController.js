@@ -34,3 +34,33 @@ exports.getBloodBanksByBloodGroup = asyncHandler(async (req, res) => {
 exports.getBloodBanks = asyncHandler(async (req,res) => {
   return sendResponse(res,200,true,'BloodBanks Fetched', await bloodBankService.getBloodBanks());
 });
+
+// @desc    Get all employees (admins and headadmins) for a blood bank
+exports.getEmployees = asyncHandler(async (req, res) => {
+  const { bloodBankId } = req.params;
+  const bloodBank = await require('../../models/BloodBank').BloodBank.findById(bloodBankId)
+    .populate('employees.headadmin', 'name email role')
+    .populate('employees.admin', 'name email role');
+
+  if (!bloodBank) {
+    return sendResponse(res, 404, false, 'Blood bank not found');
+  }
+
+  const employees = [
+    ...bloodBank.employees.headadmin.map(e => ({ ...e.toObject(), type: 'headadmin' })),
+    ...bloodBank.employees.admin.map(e => ({ ...e.toObject(), type: 'admin' }))
+  ];
+
+  return sendResponse(res, 200, true, 'Employees fetched successfully', employees);
+});
+
+// @desc    Get all donations for a blood bank
+exports.getDonations = asyncHandler(async (req, res) => {
+  const { bloodBankId } = req.params;
+  const Donation = require('../../models/Donation').Donation;
+  const donations = await Donation.find({ donatedAt: bloodBankId })
+    .sort({ createdAt: -1 })
+    .populate('donor', 'name email bloodGroup');
+
+  return sendResponse(res, 200, true, 'Donations fetched successfully', donations);
+});

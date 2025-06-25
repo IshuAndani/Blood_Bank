@@ -20,6 +20,8 @@ import BloodBankDetails from './pages/superadmin/BloodBankDetails';
 import Hospitals from './pages/superadmin/Hospitals';
 import Donors from './pages/superadmin/Donors';
 import ChatBot from './pages/ChatBot';
+import BloodBankDonations from './pages/superadmin/BloodBankDonations';
+import BloodBankEmployees from './pages/superadmin/BloodBankEmployees';
 
 function App() {
   
@@ -66,6 +68,9 @@ function App() {
             <Route path="/superadmin/donors" element={<Donors/>} />
 
             <Route path='/chatbot' element={<ChatBot/>}/>
+
+            <Route path="/bloodbanks/:bloodBankId/donations" element={<BloodBankDonations />} />
+            <Route path="/bloodbanks/:bloodBankId/employees" element={<BloodBankEmployees />} />
             
           </Routes>
         </div>
