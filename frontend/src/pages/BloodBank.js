@@ -64,7 +64,7 @@ const BloodBank = function () {
 
     return (
         <div className="container my-5">
-            <h2 className="text-center mb-4">Create Blood Request for a Blood Group</h2>
+            <h2 className="text-center text-2xl  font-bold mb-4">Create Blood Request for a Blood Group</h2>
 
             <form onSubmit={handleSubmit} className="mb-4">
                 <div className="row justify-content-center">

@@ -19,53 +19,49 @@ const Navbar = () => {
   const renderRoleLinks = () => {
     switch (role) {
       case "superadmin":
-        return (
-          <>
-            <NavbarLink to="/create/bloodbank" label="New BloodBank" />
-            <NavbarLink to="/create/hospital" label="New Hospital" />
-            <NavbarLink to="/superadmin/bloodbanks" label="BloodBanks" />
-            <NavbarLink to="/superadmin/hospitals" label="Hospitals" />
-            <NavbarLink to="/superadmin/donors" label="Donors" />
-          </>
-        );
+        return [
+          { to: "/create/bloodbank", label: "New BloodBank" },
+          { to: "/create/hospital", label: "New Hospital" },
+          { to: "/superadmin/bloodbanks", label: "BloodBanks" },
+          { to: "/superadmin/hospitals", label: "Hospitals" },
+          { to: "/superadmin/donors", label: "Donors" },
+        ];
       case "headadmin":
-        return (
-          <>
-            <NavbarLink to="/blood-requests" label="Blood Requests" />
-            <NavbarLink to="/admin/register" label="New Admin" />
-            {workplaceType === "BloodBank" && (
-              <NavbarLink to="/searchDonor" label="New Donation" />
-            )}
-          </>
-        );
+        return [
+          { to: "/blood-requests", label: "Blood Requests" },
+          { to: "/admin/register", label: "New Admin" },
+          ...(workplaceType === "BloodBank"
+            ? [{ to: "/searchDonor", label: "New Donation" }]
+            : []),
+        ];
       case "admin":
-        return (
-          <>
-            <NavbarLink to="/blood-requests" label="Blood Requests" />
-            {workplaceType === "BloodBank" && (
-              <NavbarLink to="/searchDonor" label="New Donation" />
-            )}
-          </>
-        );
+        return [
+          { to: "/blood-requests", label: "Blood Requests" },
+          ...(workplaceType === "BloodBank"
+            ? [{ to: "/searchDonor", label: "New Donation" }]
+            : []),
+        ];
       case "donor":
-        return <NavbarLink to="/chatbot" label="Chat" />;
+        return [{ to: "/chatbot", label: "Chat" }];
       default:
-        return null;
+        return [];
     }
   };
 
+  const navLinks = renderRoleLinks();
+
   return (
-    <nav className="bg-primary text-white">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link to="/" className="text-xl text-white font-bold">
+    <nav className="bg-red-500 text-white shadow-md">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="text-2xl font-bold text-white">
           Blood Bank
         </Link>
 
-        {/* Hamburger Menu Button */}
         <button
-          className="lg:hidden text-white focus:outline-none"
+          className="lg:hidden focus:outline-none"
           onClick={toggleMenu}
-          aria-label={isOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isOpen}
+          aria-label="Toggle menu"
         >
           <svg
             className="h-6 w-6 fill-current"
@@ -87,25 +83,53 @@ const Navbar = () => {
           </svg>
         </button>
 
-        {/* Menu Links */}
-        <div
-          className={`${
-            isOpen ? "block" : "hidden"
-          } w-full lg:flex lg:items-center lg:w-auto`}
-        >
-          <ul className="flex flex-col lg:flex-row lg:space-x-6 mt-4 lg:mt-0">
-            {renderRoleLinks()}
+        {/* Desktop menu */}
+        <ul className="hidden lg:flex  items-center space-x-6" style={{
+          textDecoration: 'none'
+        }}>
+          {navLinks.map((link) => (
+            <NavbarLink key={link.to} to={link.to} label={link.label} />
+          ))}
+
+          {!token ? (
+            <>
+              <NavbarLink to="/donor/register" label="Register" />
+              <NavbarLink to="/donor/login" label="Login" />
+            </>
+          ) : (
+            <li>
+              <button
+                onClick={handleLogout}
+                className="bg-white text-red-600 px-4 py-1 rounded hover:bg-gray-100 transition"
+              >
+                Logout
+              </button>
+            </li>
+          )}
+        </ul>
+      </div>
+
+      {/* Mobile menu */}
+      {isOpen && (
+        <div className="lg:hidden bg-red-500 px-4 pb-4">
+          <ul className="flex flex-col space-y-2">
+            {navLinks.map((link) => (
+              <NavbarLink key={link.to} to={link.to} label={link.label} onClick={() => setIsOpen(false)} />
+            ))}
 
             {!token ? (
               <>
-                <NavbarLink to="/donor/register" label="Register" />
-                <NavbarLink to="/donor/login" label="Login" />
+                <NavbarLink to="/donor/register" label="Register" onClick={() => setIsOpen(false)} />
+                <NavbarLink to="/donor/login" label="Login" onClick={() => setIsOpen(false)} />
               </>
             ) : (
               <li>
                 <button
-                  onClick={handleLogout}
-                  className="bg-white text-primary rounded px-3 py-1 mt-2 lg:mt-0 hover:bg-gray-100"
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full bg-white text-red-600 px-4 py-2 rounded hover:bg-gray-100 transition"
                 >
                   Logout
                 </button>
@@ -113,17 +137,18 @@ const Navbar = () => {
             )}
           </ul>
         </div>
-      </div>
+      )}
     </nav>
   );
 };
 
-/**
- * Reusable Link component for nav items
- */
-const NavbarLink = ({ to, label }) => (
+const NavbarLink = ({ to, label, onClick }) => (
   <li>
-    <Link to={to} className="block py-1 lg:py-0 hover:underline">
+    <Link
+      to={to}
+      onClick={onClick}
+      className="block text-white  transition"
+    >
       {label}
     </Link>
   </li>

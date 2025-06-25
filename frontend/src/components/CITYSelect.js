@@ -1,9 +1,9 @@
 import ALLOWED_CITIES from "../constants/cities"
 
-function CITYSelect({value,handleChange}){
+function CITYSelect({value,handleChange, className}){
     return (
         <>
-            <label htmlFor="city">City : </label>
+            <label htmlFor="city" className="text-gray-800">City : </label>
             <select name="city" id="city" className="form-select" value={value} required onChange={handleChange}>
                 <option value="">Select City</option>
                 {

@@ -53,7 +53,7 @@ const RegisterEmployee = () => {
 
   return (
     <div className="container mt-5" style={{ maxWidth: '500px' }}>
-      <h3 className="mb-4 text-center">Register Employee</h3>
+      <h3 className="mb-4 text-2xl font-semibold text-center">Register Employee</h3>
 
       {error && <div className="alert alert-danger">{error}</div>}
       {message && <div className="alert alert-success">{message}</div>}
@@ -86,7 +86,7 @@ const RegisterEmployee = () => {
           />
         </div>
 
-        <button className="btn btn-primary w-100" type="submit" disabled={loading}>
+        <button className="px-4 py-2 rounded-lg text-white bg-red-600 w-100" type="submit" disabled={loading}>
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>

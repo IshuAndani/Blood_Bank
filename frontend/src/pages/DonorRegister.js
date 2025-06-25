@@ -99,10 +99,12 @@ function DonorRegister() {
             required
             onChange={handleChange}
           />
-
-          <CITYSelect handleChange={handleChange} />
+          
+<div className='space-y-2 flex-col mb-2'>
+<CITYSelect handleChange={handleChange} />
           <BGSelect handleChange={handleChange} />
           <DOBInput handleChange={handleChange} />
+  </div>         
 
           <button
             type="submit"

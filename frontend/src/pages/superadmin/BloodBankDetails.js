@@ -1,38 +1,55 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const BloodBankDetails = () => {
   const { state: bloodBank } = useLocation();
   const navigate = useNavigate();
 
-  if (!bloodBank) return <p className="text-center mt-5">Invalid access. No blood bank data found.</p>;
+  if (!bloodBank) {
+    return (
+      <p className="text-center text-red-500 text-lg mt-10">
+        Invalid access. No blood bank data found.
+      </p>
+    );
+  }
 
   const handleNavigate = (path) => {
-      navigate(`/bloodbanks/${bloodBank._id}/${path}`, { state: { bloodBankId: bloodBank._id } });
+    navigate(`/bloodbanks/${bloodBank._id}/${path}`, {
+      state: { bloodBankId: bloodBank._id },
+    });
   };
 
   const handleRegisterHeadadmin = () => {
-    navigate('/admin/register', {
+    navigate("/admin/register", {
       state: {
-        workplaceType: 'BloodBank',
+        workplaceType: "BloodBank",
         workplaceId: bloodBank._id,
       },
     });
   };
 
   return (
-    <div className="container mt-5">
-      <h3 className="text-center mb-4">{bloodBank.name}</h3>
-      <p className="text-center text-muted">City: {bloodBank.city}</p>
+    <div className="max-w-2xl mx-auto px-4 py-10">
+      <h2 className="text-2xl font-semibold text-center mb-2">{bloodBank.name}</h2>
+      <p className="text-center text-zinc-100 mb-6">City: {bloodBank.city}</p>
 
-      <div className="d-flex flex-column align-items-center gap-3 mt-4">
-        <button className="btn btn-primary w-50" onClick={() => handleNavigate('/donations')}>
+      <div className="flex flex-col items-center gap-4">
+        <button
+          onClick={() => handleNavigate("donations")}
+          className="w-full sm:w-2/3 bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 transition"
+        >
           View Donations
         </button>
-        <button className="btn btn-secondary w-50" onClick={() => handleNavigate('/employees')}>
+        <button
+          onClick={() => handleNavigate("employees")}
+          className="w-full sm:w-2/3 bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700 transition"
+        >
           View Employees
         </button>
-        <button className="btn btn-success w-50" onClick={handleRegisterHeadadmin}>
+        <button
+          onClick={handleRegisterHeadadmin}
+          className="w-full sm:w-2/3 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
+        >
           Create Headadmin
         </button>
       </div>

@@ -82,7 +82,7 @@ const SelectLocation = () => {
           <LocationPicker onSelect={setSelectedCoords} />
         </MapContainer>
       </div>
-      <button className="btn btn-primary" onClick={handleConfirm}>
+      <button className="bg-red-600 text-white px-4 py-2 rounded-lg" onClick={handleConfirm}>
         Confirm Location
       </button>
     </div>

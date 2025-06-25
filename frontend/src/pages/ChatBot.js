@@ -46,7 +46,7 @@ const ChatBot = () => {
         </div>
       )}
 
-      <div className="bg-white border border-gray-300 rounded-xl shadow-md flex flex-col h-[500px]">
+      <div className="bg-white border border-gray-300 text-gray-800 rounded-xl shadow-md flex flex-col h-[500px]">
         {/* Chat window */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.map((msg, i) => (
@@ -74,7 +74,7 @@ const ChatBot = () => {
         <div className="border-t border-gray-200 p-3 flex items-center gap-2">
           <input
             type="text"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 transition"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 transition"
             placeholder="Ask me anything about blood donation..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
