@@ -38,7 +38,7 @@ const BloodBankDonations = () => {
       ) : donations.length === 0 ? (
         <p className="text-center text-gray-500">No donations found.</p>
       ) : (
-        <div className="flex flex-1 max-w-7xl mx-auto gap-6">
+        <div className="grid gap-6">
           {donations.map((donation) => (
             <div
               key={donation._id}
