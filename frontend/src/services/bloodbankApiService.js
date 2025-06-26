@@ -15,3 +15,8 @@ export const getBloodBankDonations = async (id) => {
     return res;
 }
 
+export const getEmployees = async (id) => {
+    const res = await api.get(`/bloodbank/${id}/employees`);
+    return res;
+}
+

@@ -3,6 +3,7 @@ const {asyncHandler} = require('../../utils/asyncHandler');
 const { sendResponse } = require('../../utils/response.util');
 const { AppError } = require('../../utils/error.handler');
 const bloodBankService = require('../../services/bloodBankService');
+const BloodBank = require('../../models/BloodBank')
 
 // @desc    Create a new blood bank
 exports.createBloodBank = asyncHandler(async (req, res) => {
@@ -38,7 +39,7 @@ exports.getBloodBanks = asyncHandler(async (req,res) => {
 // @desc    Get all employees (admins and headadmins) for a blood bank
 exports.getEmployees = asyncHandler(async (req, res) => {
   const { bloodBankId } = req.params;
-  const bloodBank = await require('../../models/BloodBank').BloodBank.findById(bloodBankId)
+  const bloodBank = await BloodBank.findById(bloodBankId)
     .populate('employees.headadmin', 'name email role')
     .populate('employees.admin', 'name email role');
 
@@ -63,4 +64,22 @@ exports.getDonations = asyncHandler(async (req, res) => {
     .populate('donor', 'name email bloodGroup');
 
   return sendResponse(res, 200, true, 'Donations fetched successfully', donations);
+});
+
+exports.getEmployees = asyncHandler(async(req,res) => {
+  const bloodBankId = req.params.bloodBankId;
+  const bloodBank = await BloodBank.findById(bloodBankId)
+    .populate('employees.headadmin', 'name email role')
+    .populate('employees.admin', 'name email role');
+
+  if (!bloodBank) {
+    return sendResponse(res, 404, false, 'Blood bank not found');
+  }
+
+  const employees = [
+    ...bloodBank.employees.headadmin.map(e => ({ ...e.toObject(), type: 'headadmin' })),
+    ...bloodBank.employees.admin.map(e => ({ ...e.toObject(), type: 'admin' }))
+  ];
+
+  return sendResponse(res, 200, true, 'Employees fetched successfully', employees);
 });
