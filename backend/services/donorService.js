@@ -9,6 +9,7 @@ const validator = require('validator');
 const { isValidDOB, isValidCity, isValidBloodGroup } = require('../utils/validator');
 const donationService = require('./donationService');
 const { Donation } = require('../models/Donation');
+const { generateContent } = require('../utils/chatBot');
 
 // Validate input
 const validateDonorInput = ({ name, email, password, bloodGroup, city, dob }, { isAdmin = false } = {}) => {
@@ -218,3 +219,15 @@ exports.addDonationToHistory = async (donorId, donationId) => {
   if (!donor) throw new AppError('Donor not found', 404);
   return donor;
 };
+
+exports.getDonors = async() => {
+  return await Donor.find({});
+}
+
+exports.chatBot = async(data) => {
+  const {contents} = data;
+  // console.log(contents);
+  const ans = (await generateContent(contents)).text;
+  // console.log(ans);
+  return ans;
+}

@@ -37,3 +37,12 @@ exports.getBloodBanks = asyncHandler(async (req, res) => {
   const data = await donorService.getBloodBanks(req.query.city, req.donor?.city);
   sendResponse(res, 200, true, 'Blood banks fetched', data);
 });
+
+exports.getDonors = asyncHandler(async(req,res) => {
+  sendResponse(res,200,true,"Donors fetched", await donorService.getDonors());
+})
+
+exports.chatBot = asyncHandler(async (req,res) => {
+  console.log(req.body);
+  sendResponse(res,200,true,"answer received", await donorService.chatBot(req.body));
+})

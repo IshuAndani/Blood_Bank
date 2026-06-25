@@ -27,12 +27,25 @@ const hospitalSchema = new mongoose.Schema({
             ref: 'Admin'
         }]
     },
-    // BloodRequest: [
-    //     {
-    //         type: mongoose.Schema.Types.ObjectId,
-    //         ref: 'BloodRequest'
-    //     }
-    // ]
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            required: true,
+            validate: {
+                validator: function (val) {
+                    return val.length === 2 &&
+                        val[0] >= -180 && val[0] <= 180 &&   // Longitude
+                        val[1] >= -90 && val[1] <= 90;       // Latitude
+                },
+                message: 'Coordinates must be valid [longitude, latitude]'
+            }
+        }
+    }
 }, {timestamps: true});
 
 hospitalSchema.pre('save', function (next) {

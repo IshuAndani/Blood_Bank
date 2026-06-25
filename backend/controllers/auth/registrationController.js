@@ -6,6 +6,8 @@ const { generateRandomPassword } = require('../../utils/passwordUtils');
 const { AppError } = require('../../utils/error.handler');
 const { sendResponse } = require('../../utils/response.util');
 const { asyncHandler } = require('../../utils/asyncHandler');
+const { cleanString } = require('../../utils/cleanString');
+const validator = require('validator');
 const mongoose = require('mongoose');
 
 // Helper: Get and validate workplace
@@ -29,7 +31,7 @@ exports.registerEmployee = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, email, workplaceType, workplaceId } = req.body;
+    let { name, email, workplaceType, workplaceId } = req.body;
     const requester = req.admin;
 
     if (!name || !email) {
@@ -37,7 +39,7 @@ exports.registerEmployee = asyncHandler(async (req, res) => {
     }
 
     email = cleanString(email).toLowerCase();
-    if(!validator.isEmail()) throw new AppError('Invalid email format', 400);
+    if(!validator.isEmail(email)) throw new AppError('Invalid email format', 400);
 
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {

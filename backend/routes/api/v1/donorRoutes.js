@@ -4,8 +4,9 @@ const { searchDonor, createDonorByAdmin } = require('../../../controllers/donor/
 const { protect } = require('../../../middlewares/auth/protect');
 const { checkRole } = require('../../../middlewares/auth/roleMiddleware');
 const { canAccessBloodBank } = require('../../../middlewares/accessContol');
-const { registerDonor, loginDonor, getDonations , getBloodBanks} = require('../../../controllers/donor/donorController');
+const { registerDonor, loginDonor, getDonations , getBloodBanks, getDonors, chatBot} = require('../../../controllers/donor/donorController');
 const { isLoggedIn,protectDonor } = require('../../../middlewares/auth/donorProtect');
+const { limiter } = require('../../../utils/rateLimit');
 
 const router = express.Router();
 
@@ -34,5 +35,9 @@ router.post('/login', loginDonor);
 router.get('/donations', isLoggedIn, getDonations);
 
 router.get('/bloodbanks', protectDonor, getBloodBanks);
+
+router.get('/', protect, checkRole(['superadmin']), getDonors);
+
+router.post('/chatbot', isLoggedIn, limiter(60*1000, 3), chatBot);
 
 module.exports = router;
